@@ -1,0 +1,15 @@
+[package]
+name = "pdal"
+description = "PDAL bindings for Rust"
+license = "MIT"
+version = "0.1.0"
+categories = ["science::geo", "api-bindings"]
+edition = "2021"
+
+[dependencies]
+autocxx = "0.26.0"
+cxx = "1.0"
+
+[build-dependencies]
+pkg-config = "0.3"
+autocxx-build = "0.26.0"
