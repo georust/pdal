@@ -17,6 +17,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     let mut b = autocxx_build::Builder::new("src/lib.rs", gdal_pkg_config.include_paths).build()?;
+    b.cargo_warnings(false);
     b.flag_if_supported("-std=c++17");
     b.compile("pdal");
     println!("cargo:rerun-if-changed=src/lib.rs");
