@@ -1,5 +1,6 @@
 use pkg_config::Config;
 use std::error::Error;
+use std::path::PathBuf;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let mut gdal_pkg_config = Config::new().probe("pdal")?;
@@ -16,10 +17,20 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
+    gdal_pkg_config.include_paths.push(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("src")
+            .join("cpp"),
+    );
+
     let mut b = autocxx_build::Builder::new("src/lib.rs", gdal_pkg_config.include_paths).build()?;
-    b.cargo_warnings(false);
-    b.flag_if_supported("-std=c++17");
-    b.compile("pdal");
+    b.cargo_warnings(false)
+        .flag_if_supported("-std=c++17")
+        .file("src/cpp/shims.cpp")
+        .compile("pdal");
+
     println!("cargo:rerun-if-changed=src/lib.rs");
+    println!("cargo:rerun-if-changed=src/cpp/shims.hpp");
+    println!("cargo:rerun-if-changed=src/cpp/shims.cpp");
     Ok(())
 }
