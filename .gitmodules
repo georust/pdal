@@ -1,0 +1,3 @@
+[submodule "pdal-sys/vendor"]
+	path = pdal-sys/vendor
+	url = https://github.com/PDAL/CAPI.git

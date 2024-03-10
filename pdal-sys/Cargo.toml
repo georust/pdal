@@ -1,0 +1,13 @@
+[package]
+name = "pdal-sys"
+version = "0.1.0"
+edition = "2021"
+
+links = "pdal"
+[dependencies]
+
+
+[build-dependencies]
+bindgen = "0.58.0"
+cmake = "0.1.50"
+env_logger = "*"

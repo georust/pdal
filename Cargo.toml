@@ -6,10 +6,8 @@ version = "0.1.0"
 categories = ["science::geo", "api-bindings"]
 edition = "2021"
 
-[dependencies]
-autocxx = "0.26.0"
-cxx = "1.0"
+[workspace]
+members = [".", "pdal-sys"]
 
-[build-dependencies]
-pkg-config = "0.3"
-autocxx-build = "0.26.0"
+[dependencies]
+pdal-sys = { path = "pdal-sys" }
