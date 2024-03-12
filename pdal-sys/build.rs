@@ -35,7 +35,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         .define("BUILD_SHARED_LIBS", "OFF") // not working
         .build();
 
-    println!("cargo:rustc-link-search=native={}", dst.display());
+    println!(
+        "cargo:rustc-link-search=native={}",
+        dst.join("lib").display()
+    );
     println!("cargo:rustc-link-lib=pdalc");
 
     let bindings = bindgen::Builder::default()
