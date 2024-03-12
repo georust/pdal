@@ -66,7 +66,7 @@ impl ExecutedPipeline {
     }
 
     pub fn metadata(&self) -> Result<String> {
-        let s = fetch_string_from_handle_with_buffer::<8096>(
+        let s = fetch_string_from_handle_with_buffer::<8096, _>(
             self.pipeline.as_ptr(),
             pdal_sys::PDALGetPipelineMetadata,
         )?;
@@ -77,7 +77,7 @@ impl ExecutedPipeline {
     }
 
     pub fn pipeline_json(&self) -> Result<String> {
-        let s = fetch_string_from_handle_with_buffer::<8096>(
+        let s = fetch_string_from_handle_with_buffer::<8096, _>(
             self.pipeline.as_ptr(),
             pdal_sys::PDALGetPipelineAsString,
         )?;

@@ -71,13 +71,13 @@ pub(crate) fn fetch_string_with_buffer<const BUF_SIZE: usize>(f: CharBufFetch) -
 }
 
 pub(crate) type Handle = *mut ::std::ffi::c_void;
-pub(crate) type MemberCharBufFetch =
-    unsafe extern "C" fn(handle: Handle, *mut ::std::ffi::c_char, size: size_t) -> size_t;
+pub(crate) type MemberCharBufFetch<H> =
+    unsafe extern "C" fn(handle: H, *mut ::std::ffi::c_char, size: size_t) -> size_t;
 
 /// Fetch a handle-associated string from a C function that writes to a buffer.
-pub(crate) fn fetch_string_from_handle_with_buffer<const BUF_SIZE: usize>(
-    handle: Handle,
-    f: MemberCharBufFetch,
+pub(crate) fn fetch_string_from_handle_with_buffer<const BUF_SIZE: usize, H>(
+    handle: H,
+    f: MemberCharBufFetch<H>,
 ) -> Result<CString> {
     let mut buffer = [0 as c_char; BUF_SIZE];
     let value = unsafe {

@@ -1,5 +1,6 @@
 use crate::error::Result;
 use crate::utils::{fetch_string_from_handle_with_buffer, Conv};
+use crate::PointLayout;
 use pdal_sys::size_t;
 
 #[derive(Debug)]
@@ -30,7 +31,7 @@ impl PointView {
 
     /// Get the CRS as a Proj4 string.
     pub fn proj4(&self) -> Result<String> {
-        let s = fetch_string_from_handle_with_buffer::<1024>(
+        let s = fetch_string_from_handle_with_buffer::<1024, _>(
             self.as_ptr(),
             pdal_sys::PDALGetPointViewProj4,
         )?;
@@ -47,13 +48,18 @@ impl PointView {
             unsafe { pdal_sys::PDALGetPointViewWkt(handle, buf, size, true) }
         }
 
-        let s = fetch_string_from_handle_with_buffer::<1024>(self.as_ptr(), pretty_wkt)?;
+        let s = fetch_string_from_handle_with_buffer::<1024, _>(self.as_ptr(), pretty_wkt)?;
         Ok(Conv(s).try_into()?)
     }
 
-    // pub fn layout(&self) -> Result<PointLayout> {
-    //     todo!()
-    // }
+    /// Get the point view layout.
+    pub fn layout(&self) -> Result<PointLayout> {
+        let layout = unsafe { pdal_sys::PDALGetPointViewLayout(self.as_ptr()) };
+        if layout.is_null() {
+            return Err("PDAL point view layout retrieval failed".into());
+        }
+        Ok(PointLayout::new(layout))
+    }
 }
 
 impl Drop for PointView {
