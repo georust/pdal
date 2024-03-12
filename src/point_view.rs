@@ -60,6 +60,12 @@ impl PointView {
         }
         Ok(PointLayout::new(layout))
     }
+
+    // TODO:
+    // - PDALGetPackedPoint
+    // - PDALGetAllPackedPoints
+    // - PDALGetMeshSize
+    // - PDALGetAllTriangles
 }
 
 impl Drop for PointView {
@@ -90,6 +96,11 @@ impl PointViewIter {
     fn next(&mut self) -> pdal_sys::PDALPointViewPtr {
         unsafe { pdal_sys::PDALGetNextPointView(self.as_ptr()) }
     }
+
+    // why?
+    // fn reset(&mut self) -> () {
+    //     unsafe { pdal_sys::PDALResetPointViewIterator(self.as_ptr()) }
+    // }
 
     pub fn as_ptr(&self) -> pdal_sys::PDALPointViewIteratorPtr {
         self.0

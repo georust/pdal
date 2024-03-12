@@ -3,12 +3,17 @@ use crate::json::PdalJson;
 use crate::utils::fetch_string_from_handle_with_buffer;
 use crate::PointViewIter;
 
+use pdal_sys::PDALPipelineIsStreamable;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug)]
 pub struct Pipeline(pdal_sys::PDALPipelinePtr);
 
 impl Pipeline {
+    pub fn as_ptr(&self) -> pdal_sys::PDALPipelinePtr {
+        self.0
+    }
+
     /// Construct a new pipeline.
     pub fn new<J: Into<PdalJson>>(pdal_json: J) -> Result<Self> {
         let json: PdalJson = pdal_json.try_into()?;
@@ -18,6 +23,11 @@ impl Pipeline {
         } else {
             Ok(Self(pipeline))
         }
+    }
+
+    /// Determine if the pipeline is streamable.
+    pub fn is_streamable(&self) -> bool {
+        unsafe { PDALPipelineIsStreamable(self.as_ptr()) }
     }
 
     /// Execute the pipeline.
@@ -31,8 +41,15 @@ impl Pipeline {
         Ok(ExecutedPipeline::new(self, p_count as usize))
     }
 
-    pub(crate) fn as_ptr(&self) -> pdal_sys::PDALPipelinePtr {
-        self.0
+    /// Executes a pipeline as a streamable pipeline. Will run as non-streamed pipeline if the pipeline is not streamable.
+    ///
+    /// Note: number of points produced is not available when run in streamed mode.
+    pub fn execute_streamed(self) -> Result<ExecutedPipeline> {
+        let success = unsafe { pdal_sys::PDALExecutePipelineAsStream(self.as_ptr()) };
+        if !success {
+            return Err("PDAL pipeline execution failed".into());
+        }
+        Ok(ExecutedPipeline::new(self, 0))
     }
 }
 
@@ -65,24 +82,38 @@ impl ExecutedPipeline {
         Ok(PointViewIter::new(iter_handle))
     }
 
+    /// Retrieves a pipeline's computed metadata
     pub fn metadata(&self) -> Result<String> {
         let s = fetch_string_from_handle_with_buffer::<8096, _>(
             self.pipeline.as_ptr(),
             pdal_sys::PDALGetPipelineMetadata,
         )?;
         if s.is_empty() {
-            return Err("Pipeline must be executed to access metadata".into());
+            return Err("Unable to extract metadata".into());
         }
         Ok(s.to_string_lossy().into_owned())
     }
 
+    /// Retrieves the full json string representation of an execute pipeline
     pub fn pipeline_json(&self) -> Result<String> {
         let s = fetch_string_from_handle_with_buffer::<8096, _>(
             self.pipeline.as_ptr(),
             pdal_sys::PDALGetPipelineAsString,
         )?;
         if s.is_empty() {
-            return Err("Pipeline must be executed before rendered to JSON".into());
+            return Err("Unable to extract pipeline JSON".into());
+        }
+        Ok(s.to_string_lossy().into_owned())
+    }
+
+    /// Retrieves a pipeline's computed schema.
+    pub fn schema(&self) -> Result<String> {
+        let s = fetch_string_from_handle_with_buffer::<8096, _>(
+            self.pipeline.as_ptr(),
+            pdal_sys::PDALGetPipelineSchema,
+        )?;
+        if s.is_empty() {
+            return Err("Unable to extract pipeline results schema".into());
         }
         Ok(s.to_string_lossy().into_owned())
     }
@@ -100,13 +131,15 @@ mod test {
     use crate::Pipeline;
     #[test]
     fn test_validate_pipeline() -> TestResult {
+        let json = read_test_file("invalid.json");
+        let pipeline = Pipeline::new(json);
+        assert!(pipeline.is_err());
+
         let json = read_test_file("stats.json");
         let pipeline = Pipeline::new(json);
         assert!(pipeline.is_ok());
 
-        let json = read_test_file("invalid.json");
-        let pipeline = Pipeline::new(json);
-        assert!(pipeline.is_err());
+        pipeline.unwrap().is_streamable();
         Ok(())
     }
 
@@ -127,6 +160,16 @@ mod test {
         let md = results.metadata()?;
         assert!(!md.is_empty());
         assert!(md.contains("average"));
+        Ok(())
+    }
+
+    #[test]
+    fn test_pipeline_schema() -> TestResult {
+        let json = read_test_file("stats.json");
+        let pipeline = Pipeline::new(json)?;
+        let results = pipeline.execute()?;
+        let schema = results.schema()?;
+        assert!(schema.contains("dimensions"));
         Ok(())
     }
 }

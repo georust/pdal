@@ -1,7 +1,9 @@
 use crate::error::Result;
 use crate::utils::{fetch_string_from_handle_with_buffer, Conv};
 use pdal_sys::{size_t, PDALDimType, PDALDimTypeListPtr, PDALGetInvalidDimType};
+use std::fmt::Debug;
 
+/// Set of dimensions available in a point layout.
 #[derive(Debug)]
 pub struct DimensionTypeList(PDALDimTypeListPtr);
 
@@ -20,7 +22,7 @@ impl DimensionTypeList {
     }
 
     /// Returns the number of bytes required to store data referenced by self.
-    pub fn byte_count(&self) -> usize {
+    pub fn size_bytes(&self) -> usize {
         unsafe { pdal_sys::PDALGetDimTypeListByteCount(self.as_ptr()) as usize }
     }
 
@@ -46,7 +48,7 @@ impl Drop for DimensionTypeList {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct DimensionType(PDALDimType);
 
 impl DimensionType {
@@ -72,13 +74,18 @@ impl DimensionType {
     }
 
     // TODO: make enum for interpretation
-    /// Gets the interpretation name of a dimension
+    /// Gets the interpretation name of a dimension, which is its primitive storage type.
     pub fn interpretation(&self) -> Result<String> {
         let s = fetch_string_from_handle_with_buffer::<256, _>(
             self.0,
             pdal_sys::PDALGetDimTypeInterpretationName,
         )?;
         Ok(Conv(s).try_into()?)
+    }
+
+    /// Retrieves the byte count of a dimension type's interpretation, i.e., its data size.
+    pub fn size_bytes(&self) -> usize {
+        unsafe { pdal_sys::PDALGetDimTypeInterpretationByteCount(self.0) as usize }
     }
 
     /// Dimension scaling factor
@@ -95,6 +102,25 @@ impl DimensionType {
 impl Default for DimensionType {
     fn default() -> Self {
         Self::invalid()
+    }
+}
+
+impl From<PDALDimType> for DimensionType {
+    fn from(value: PDALDimType) -> Self {
+        Self(value)
+    }
+}
+
+impl Debug for DimensionType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("DimensionType")
+            .field("id", &self.id())
+            .field("name", &self.name().unwrap_or_default())
+            .field("interpretation", &self.interpretation().unwrap_or_default())
+            .field("size_bytes", &self.size_bytes())
+            .field("scale", &self.scale())
+            .field("offset", &self.offset())
+            .finish()
     }
 }
 
@@ -132,9 +158,20 @@ mod tests {
 
         assert_eq!(types.len(), 20);
 
-        for dt in types.iter() {
-            println!("{} -> {}", dt.name()?, dt.interpretation()?);
-        }
+        let dim = types
+            .iter()
+            .find(|dt| dt.name().unwrap() == "Blue")
+            .ok_or("Blue dimension not found")?;
+        assert_eq!(dim.interpretation()?, "uint16_t");
+
+        // for dt in types.iter() {
+        //     println!(
+        //         "{} -> {} ({})",
+        //         dt.name()?,
+        //         dt.interpretation()?,
+        //         dt.size_bytes()
+        //     );
+        // }
 
         Ok(())
     }
