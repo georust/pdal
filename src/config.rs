@@ -1,5 +1,5 @@
 use crate::error::Result;
-use crate::utils::{fetch_int, fetch_string, Conv};
+use crate::utils::{fetch_int, fetch_string_with_buffer, Conv};
 use pdal_sys::{
     PDALPluginInstallPath, PDALSha1, PDALVersionMajor, PDALVersionMinor, PDALVersionPatch,
     PDALVersionString,
@@ -19,12 +19,13 @@ pub struct Config {
 impl Config {
     pub fn new() -> Result<Self> {
         Ok(Self {
-            version: Conv(fetch_string(PDALVersionString)?).try_into()?,
+            version: Conv(fetch_string_with_buffer::<256>(PDALVersionString)?).try_into()?,
             major: fetch_int(PDALVersionMajor)?,
             minor: fetch_int(PDALVersionMinor)?,
             patch: fetch_int(PDALVersionPatch)?,
-            sha: Conv(fetch_string(PDALSha1)?).try_into()?,
-            plugin_path: Conv(fetch_string(PDALPluginInstallPath)?).try_into()?,
+            sha: Conv(fetch_string_with_buffer::<256>(PDALSha1)?).try_into()?,
+            plugin_path: Conv(fetch_string_with_buffer::<1024>(PDALPluginInstallPath)?)
+                .try_into()?,
         })
     }
 }

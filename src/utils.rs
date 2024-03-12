@@ -1,5 +1,6 @@
+#![allow(unused)]
 use crate::error::Result;
-use pdal_sys::{size_t, PDALFullVersionString};
+use pdal_sys::size_t;
 use std::ffi::{c_char, c_int, CString};
 use std::ops::Deref;
 use std::path::PathBuf;
@@ -53,21 +54,44 @@ impl TryFrom<Conv<CString>> for PathBuf {
 }
 
 pub(crate) type CharBufFetch =
-    unsafe extern "C" fn(buf: *mut ::std::os::raw::c_char, size: size_t) -> size_t;
-pub(crate) type IntFetch = unsafe extern "C" fn() -> c_int;
+    unsafe extern "C" fn(buf: *mut ::std::ffi::c_char, size: size_t) -> size_t;
 
-pub(crate) fn fetch_string(f: CharBufFetch) -> Result<CString> {
-    const BUF_SIZE: usize = 1024;
+/// Fetch a string from a C function that writes to a buffer.
+pub(crate) fn fetch_string_with_buffer<const BUF_SIZE: usize>(f: CharBufFetch) -> Result<CString> {
     let mut buffer = [0 as c_char; BUF_SIZE];
     let value = unsafe {
         let len = f(buffer.as_mut_ptr(), BUF_SIZE as size_t);
-        assert!((len as usize) < BUF_SIZE);
+        if len as usize >= BUF_SIZE {
+            return Err("buffer size too small".into());
+        }
         let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
         CString::new(byte_slice).unwrap()
     };
     Ok(value)
 }
 
+pub(crate) type Handle = *mut ::std::ffi::c_void;
+pub(crate) type MemberCharBufFetch =
+    unsafe extern "C" fn(handle: Handle, *mut ::std::ffi::c_char, size: size_t) -> size_t;
+
+/// Fetch a handle-associated string from a C function that writes to a buffer.
+pub(crate) fn fetch_string_from_handle_with_buffer<const BUF_SIZE: usize>(
+    handle: Handle,
+    f: MemberCharBufFetch,
+) -> Result<CString> {
+    let mut buffer = [0 as c_char; BUF_SIZE];
+    let value = unsafe {
+        let len = f(handle, buffer.as_mut_ptr(), BUF_SIZE as size_t);
+        if len as usize >= BUF_SIZE {
+            return Err("buffer size too small".into());
+        }
+        let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
+        CString::new(byte_slice).unwrap()
+    };
+    Ok(value)
+}
+
+pub(crate) type IntFetch = unsafe extern "C" fn() -> c_int;
 pub(crate) fn fetch_int(f: IntFetch) -> Result<i32> {
     let value = unsafe { f() };
     Ok(value as i32)

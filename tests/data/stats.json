@@ -1,0 +1,13 @@
+{
+  "pipeline":[
+    "tests/data/1.2-with-color.las",
+    {
+      "type":"filters.stats"
+    },
+    {
+      "type":"writers.text",
+      "format": "geojson",
+      "filename": "target/pdal-stats.json"
+    }
+  ]
+}
