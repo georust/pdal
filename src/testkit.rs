@@ -18,3 +18,5 @@ pub fn read_test_file(filename: &str) -> String {
     std::fs::read_to_string(DATA_DIR.join(filename))
         .expect(&format!("Data file contents for {filename}"))
 }
+
+pub type TestResult = crate::error::Result<()>;

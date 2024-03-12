@@ -36,6 +36,6 @@ mod test {
     #[test]
     fn test_pdal_config() {
         let conf = Config::new().expect("PDAL Config");
-        dbg!(conf);
+        assert_eq!(conf.major, 2);
     }
 }

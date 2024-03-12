@@ -1,0 +1,9 @@
+{
+  "pipeline":[
+    "barf",
+    {
+      "type":"filters.junk"
+    },
+    "hurl"
+  ]
+}

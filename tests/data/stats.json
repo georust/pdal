@@ -1,13 +1,11 @@
 {
   "pipeline":[
-    "tests/data/1.2-with-color.las",
+    "tests/data/autzen_trim.laz",
     {
       "type":"filters.stats"
     },
     {
-      "type":"writers.text",
-      "format": "geojson",
-      "filename": "target/pdal-stats.json"
+      "type":"writers.null"
     }
   ]
 }
