@@ -5,3 +5,8 @@ TEST_DATA_DIR = { value = "tests/data", relative = true }
 [alias]
 # Run clippy, raising warnings to errors
 nowarn = "clippy --all-targets -- -D warnings"
+
+[target.aarch64-apple-darwin]
+rustflags = [
+    "-C", "link-arg=-lc++",
+]

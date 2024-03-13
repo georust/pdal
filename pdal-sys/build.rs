@@ -3,6 +3,9 @@ use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+// See https://github.com/alexcrichton/curl-rust/blob/0.4.34/curl-sys/build.rs
+// and https://github.com/rust-lang/cargo/issues/5077
+// for inspiration.
 fn main() -> Result<(), Box<dyn Error>> {
     std::env::set_var("RUST_LOG", "bindgen=info");
     let _ = env_logger::builder().is_test(true).try_init()?;
@@ -56,6 +59,20 @@ fn main() -> Result<(), Box<dyn Error>> {
     let out_path = PathBuf::from(&env::var("OUT_DIR")?).join("bindings.rs");
     //println!("cargo:warning={}", out_path.to_string_lossy());
     bindings.write_to_file(out_path)?;
+
+    let mut pdal_pkg_config = pkg_config::Config::new().probe("pdal")?;
+
+    // For some reason pkg-config reports a path like `/foo/bar/include/pdal`, but
+    // internal C++ references assume that the path is `/foo/bar/include`.
+    if let Some(pdal_inc) = pdal_pkg_config
+        .include_paths
+        .iter()
+        .find(|&path| path.ends_with("pdal"))
+    {
+        if let Some(parent) = pdal_inc.parent() {
+            pdal_pkg_config.include_paths.push(parent.to_path_buf());
+        }
+    }
 
     Ok(())
 }

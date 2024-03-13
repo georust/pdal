@@ -10,4 +10,5 @@ links = "pdal"
 [build-dependencies]
 bindgen = "0.58.0"
 cmake = "0.1.50"
+pkg-config = "0.3"
 env_logger = "*"
