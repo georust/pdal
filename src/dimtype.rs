@@ -23,7 +23,6 @@ use pdal_sys::{size_t, PDALDimType, PDALDimTypeListPtr, PDALGetInvalidDimType};
 use std::fmt::Debug;
 
 /// Set of dimensions available in a point layout.
-#[derive(Debug)]
 pub struct DimensionTypeList(PDALDimTypeListPtr);
 
 impl DimensionTypeList {
@@ -64,6 +63,14 @@ impl DimensionTypeList {
 impl Drop for DimensionTypeList {
     fn drop(&mut self) {
         unsafe { pdal_sys::PDALDisposeDimTypeList(self.0) }
+    }
+}
+
+impl Debug for DimensionTypeList {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_list()
+            .entries(self.iter().collect::<Vec<_>>().as_slice())
+            .finish()
     }
 }
 
@@ -182,16 +189,9 @@ mod tests {
             .find(|dt| dt.name().unwrap() == "Blue")
             .ok_or("Blue dimension not found")?;
         assert_eq!(dim.interpretation()?, "uint16_t");
-
-        // for dt in types.iter() {
-        //     println!(
-        //         "{} -> {} ({})",
-        //         dt.name()?,
-        //         dt.interpretation()?,
-        //         dt.size_bytes()
-        //     );
-        // }
-
+        assert_eq!(dim.size_bytes(), 2);
+        assert_eq!(dim.scale(), 1.0);
+        assert_eq!(dim.offset(), 0.0);
         Ok(())
     }
 }

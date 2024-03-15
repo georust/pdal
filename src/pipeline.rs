@@ -88,11 +88,13 @@ impl ExecutedPipeline {
     pub(crate) fn new(pipeline: Pipeline, points: usize) -> Self {
         Self { pipeline, points }
     }
+
     /// Get the number of points produced by the pipeline.
     pub fn point_count(&self) -> usize {
         self.points
     }
 
+    /// Get an iterator over the point views produced by the pipeline.
     pub fn point_views(&self) -> Result<PointViewIter> {
         let iter_handle = unsafe { pdal_sys::PDALGetPointViews(self.pipeline.as_ptr()) };
         if iter_handle.is_null() {

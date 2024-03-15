@@ -21,6 +21,7 @@
 use crate::error::Result;
 use pdal_sys::size_t;
 use std::ffi::{c_char, c_int, CString};
+use std::fmt::{Debug, Formatter};
 use std::ops::Deref;
 use std::path::PathBuf;
 
@@ -69,6 +70,25 @@ impl TryFrom<Conv<CString>> for PathBuf {
 
     fn try_from(value: Conv<CString>) -> std::result::Result<Self, Self::Error> {
         Ok(value.to_str()?.into())
+    }
+}
+
+/// Newtype wrapper for debug rendering utility.
+pub(crate) struct Elided<'a, T>(pub &'a T);
+
+impl<T: Debug> Debug for Elided<'_, T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        use std::fmt::Write;
+        let max_len = if f.alternate() { 80 } else { 15 };
+        let mut buf = String::new();
+        write!(buf, "{:?}", self.0)?;
+
+        if buf.len() > max_len {
+            let h = max_len / 2;
+            write!(f, "{} \u{2026} {}", &buf[..h], &buf[buf.len() - h..])
+        } else {
+            write!(f, "{:?}", self.0)
+        }
     }
 }
 

@@ -1,0 +1,12 @@
+{
+  "pipeline":[
+    "tests/data/autzen_trim.laz",
+    {
+      "type":"filters.info"
+    },
+    {
+      "type":"writers.las",
+        "filename":"target/info.las"
+    }
+  ]
+}

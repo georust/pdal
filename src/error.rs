@@ -17,5 +17,8 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+// TODO: Introduce `thiserror` crate for more scalable error handling
+/// Placeholder error type.
 pub type Error = Box<dyn std::error::Error>;
+/// Crate-wide result type.
 pub type Result<T, E = Error> = std::result::Result<T, E>;

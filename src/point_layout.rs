@@ -21,10 +21,10 @@ use crate::error::Result;
 use crate::{DimensionType, DimensionTypeList};
 use pdal_sys::PDALFindDimType;
 use std::ffi::CString;
+use std::fmt::Debug;
 use std::marker::PhantomData;
 
 /// Point layout definition
-#[derive(Debug)]
 pub struct PointLayout<'a>(pdal_sys::PDALPointLayoutPtr, PhantomData<&'a ()>);
 
 impl<'a> PointLayout<'a> {
@@ -61,7 +61,7 @@ impl<'a> PointLayout<'a> {
     pub fn dimension_size(&self, name: &str) -> Result<usize> {
         let name = CString::new(name)?;
         let s = unsafe { pdal_sys::PDALGetDimSize(self.as_ptr(), name.as_ptr()) };
-        if s <= 0 {
+        if s == 0 {
             return Err(format!("dimension size for {name:?} not found").into());
         }
         Ok(s as usize)
@@ -71,10 +71,22 @@ impl<'a> PointLayout<'a> {
     pub fn dimension_offset(&self, name: &str) -> Result<usize> {
         let name = CString::new(name)?;
         let s = unsafe { pdal_sys::PDALGetDimPackedOffset(self.as_ptr(), name.as_ptr()) };
-        if s <= 0 {
+        if s == 0 {
             return Err(format!("dimension offset for {name:?} not found").into());
         }
         Ok(s as usize)
+    }
+}
+
+impl Debug for PointLayout<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("PointLayout")
+            .field("point_size", &self.point_size())
+            .field(
+                "dimension_types",
+                &self.dimension_types().map_err(|_| std::fmt::Error)?,
+            )
+            .finish()
     }
 }
 
@@ -89,6 +101,7 @@ mod tests {
         let result = pipeline.execute()?;
         let view = result.point_views()?.next().ok_or("no point view")?;
         let layout = view.layout()?;
+
         assert_eq!(layout.point_size(), 56);
         assert_eq!(layout.dimension("X")?.interpretation()?, "double");
         Ok(())
