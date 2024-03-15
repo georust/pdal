@@ -5,6 +5,7 @@ TEST_DATA_DIR = { value = "tests/data", relative = true }
 [alias]
 # Run clippy, raising warnings to errors
 nowarn = "clippy --all-targets -- -D warnings"
+coverage = "tarpaulin --out Html --output-dir target --rustflags=-Clink-arg=-lc++"
 
 [target.aarch64-apple-darwin]
 rustflags = [
