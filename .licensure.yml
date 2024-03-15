@@ -1,0 +1,45 @@
+# To update copyright headers, install [licensure](https://crates.io/crates/licensure) and run
+#
+#     licensure --in-place --project
+#
+
+change_in_place: true
+
+excludes:
+  - \.gitignore
+  - .*lock
+  - \.git/.*
+  - \.git.*
+  - \.licensure\.yml
+  - README.*
+  - LICENSE.*
+  - .*\.(md|rst|txt)
+  - pdal-sys/vendor
+  - tests/data
+  - Cargo.*
+  - \.cargo/.*
+
+licenses:
+  - files: any
+    ident: MIT
+    authors:
+      - name: NUVIEW, Inc.
+        email: simeon.fitch@nuview.space
+    auto_template: true
+
+comments:
+  - extensions:
+      - rs
+      - h
+    columns: 100
+    commenter:
+      type: line
+      comment_char: "//"
+      trailing_lines: 1
+  - extension: any
+    columns: 100
+    commenter:
+      type: line
+      comment_char: '#'
+      trailing_lines: 1
+    
