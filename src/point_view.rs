@@ -23,12 +23,13 @@ use crate::{DimensionTypeList, PointLayout};
 use pdal_sys::size_t;
 use std::ffi::c_char;
 use std::fmt::{Debug, Formatter};
+use std::marker::PhantomData;
 
-pub struct PointView(pdal_sys::PDALPointViewPtr);
+pub struct PointView<'pipeline>(pdal_sys::PDALPointViewPtr, PhantomData<&'pipeline ()>);
 
-impl PointView {
+impl<'pipeline> PointView<'pipeline> {
     pub(crate) fn new(handle: pdal_sys::PDALPointViewPtr) -> Self {
-        Self(handle)
+        Self(handle, PhantomData)
     }
     pub fn as_ptr(&self) -> pdal_sys::PDALPointViewPtr {
         self.0
@@ -96,8 +97,6 @@ impl PointView {
             ) as usize
         };
 
-        dbg!(&buf);
-
         if size != p_size {
             return Err("Expected point size of '{}'; got '{}'".into());
         }
@@ -111,7 +110,7 @@ impl PointView {
     // - PDALGetAllTriangles
 }
 
-impl Drop for PointView {
+impl Drop for PointView<'_> {
     fn drop(&mut self) {
         unsafe { pdal_sys::PDALDisposePointView(self.as_ptr()) }
     }
@@ -125,7 +124,7 @@ impl Drop for PointView {
 //     }
 // }
 
-impl Debug for PointView {
+impl Debug for PointView<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("PointView")
             .field("id", &self.id())
@@ -139,39 +138,42 @@ impl Debug for PointView {
 pub struct PackedPoint(Vec<u8>);
 
 /// Iterator over point views.
-pub struct PointViewIter(pdal_sys::PDALPointViewIteratorPtr);
+pub struct PointViewIter<'pipeline>(
+    pdal_sys::PDALPointViewIteratorPtr,
+    PhantomData<&'pipeline ()>,
+);
 
-impl PointViewIter {
+impl<'pipeline> PointViewIter<'pipeline> {
     pub(crate) fn new(handle: pdal_sys::PDALPointViewIteratorPtr) -> Self {
-        Self(handle)
+        Self(handle, PhantomData)
     }
 
-    fn has_next(&self) -> bool {
+    pub(crate) fn has_next(&self) -> bool {
         unsafe { pdal_sys::PDALHasNextPointView(self.as_ptr()) }
     }
 
-    fn next(&mut self) -> pdal_sys::PDALPointViewPtr {
+    pub(crate) fn get_next(&mut self) -> pdal_sys::PDALPointViewPtr {
         unsafe { pdal_sys::PDALGetNextPointView(self.as_ptr()) }
     }
 
-    pub fn as_ptr(&self) -> pdal_sys::PDALPointViewIteratorPtr {
+    pub(crate) fn as_ptr(&self) -> pdal_sys::PDALPointViewIteratorPtr {
         self.0
     }
 }
 
-impl Drop for PointViewIter {
+impl Drop for PointViewIter<'_> {
     fn drop(&mut self) {
         unsafe { pdal_sys::PDALDisposePointViewIterator(self.as_ptr()) }
     }
 }
 
-impl Iterator for PointViewIter {
-    type Item = PointView;
+impl<'pipline> Iterator for PointViewIter<'pipline> {
+    type Item = PointView<'pipline>;
     fn next(&mut self) -> Option<Self::Item> {
         if !self.has_next() {
             return None;
         }
-        let next = self.next();
+        let next = self.get_next();
         if next.is_null() {
             None
         } else {
@@ -183,14 +185,7 @@ impl Iterator for PointViewIter {
 #[cfg(test)]
 mod tests {
     use crate::testkit::{read_test_file, TestResult};
-    use crate::{error::Result, ExecutedPipeline, Pipeline, PointView};
-
-    #[test]
-    fn test_lifetime() {
-        let json = read_test_file("copy.json");
-        let pipeline = Pipeline::new(json)?;
-        let result = pipeline.execute()?;
-    }
+    use crate::{error::Result, ExecutedPipeline, Pipeline};
 
     fn fixture() -> Result<ExecutedPipeline> {
         let json = read_test_file("copy.json");
@@ -198,15 +193,10 @@ mod tests {
         pipeline.execute()
     }
 
-    fn read_view() -> Result<PointView> {
-        let result = fixture()?;
-        let view = result.point_views()?.next().ok_or("no point view")?;
-        Ok(view)
-    }
-
     #[test]
     fn test_iterator() -> TestResult {
-        let view = read_view()?;
+        let result = fixture()?;
+        let view = result.point_views()?.next().ok_or("no point view")?;
         assert_eq!(view.point_count(), 110000);
         assert_eq!(view.proj4()?, "+proj=lcc +lat_0=41.75 +lon_0=-120.5 +lat_1=43 +lat_2=45.5 +x_0=400000 +y_0=0 +ellps=GRS80 +units=ft +no_defs");
         assert!(view
@@ -217,8 +207,8 @@ mod tests {
 
     #[test]
     fn test_packed_point() -> TestResult {
-        let view = read_view()?;
-        dbg!(&view);
+        let result = fixture()?;
+        let view = result.point_views()?.next().ok_or("no point view")?;
         let layout = view.layout()?;
         dbg!(&layout);
         let dims = layout.dimension_types()?;

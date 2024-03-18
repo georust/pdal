@@ -38,7 +38,7 @@ impl Pipeline {
         let json: PdalJson = pdal_json.try_into()?;
         let pipeline = unsafe { pdal_sys::PDALCreatePipeline(json.as_ptr()) };
         if pipeline.is_null() {
-            return Err("PDAL pipeline creation failed".into());
+            Err("PDAL pipeline creation failed".into())
         } else {
             Ok(Self(pipeline))
         }

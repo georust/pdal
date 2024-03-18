@@ -12,3 +12,8 @@ Before building, you may need to this command first.
     git submodule update --init --recursive vendor
 
 The `build.rs` file attempts to do this for you, but it may not work in all cases.
+
+--> THIS IS TEMPORARY <--
+
+According to https://kornel.ski/rust-sys-crate#donts, it's bad practice to have a build script do any downloading, 
+which is basically what we're doing here. 
