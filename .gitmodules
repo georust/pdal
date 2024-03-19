@@ -1,4 +1,0 @@
-[submodule "pdal-sys/vendor"]
-	path = pdal-sys/vendor
-	url = git@github.com:s22s/PDAL-CAPI.git
-	branch = develop

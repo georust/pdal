@@ -17,28 +17,72 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#![allow(non_upper_case_globals)]
-#![allow(non_camel_case_types)]
-#![allow(non_snake_case)]
-#![allow(deref_nullptr)]
-include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+#![allow(dead_code)]
+#[cxx::bridge]
+mod ffi {
+    
+    #[namespace = "pdal::Config"]
+    #[repr(u32)]
+    enum Feature {
+        LAZPERF,
+        ZSTD,
+        ZLIB,
+        LZMA,
+        LIBXML2
+    }
+    
+    #[namespace = "pdal::Config"]
+    unsafe extern "C++" {
+        include!("pdal-sys/src/bridge.hpp");
+        type Feature;
+        fn hasFeature(f: Feature) -> bool;
+        fn versionInteger() -> i32;
+        fn versionMajor() -> i32;
+        fn versionMinor() -> i32;
+        fn versionPatch() -> i32;
+    }
+    #[namespace = "pdal_sys::Config"]
+    unsafe extern "C++" {
+        include!("pdal-sys/src/bridge.hpp");
+        fn fullVersionString() -> String;
+        fn versionString() -> String;
+        fn sha1() -> String;
+        fn debugInformation() -> String;
+        fn pluginInstallPath() -> String;
+    }
+}
 
 #[cfg(test)]
 mod tests {
-    use crate::{size_t, PDALFullVersionString};
-    use std::ffi::{c_char, CString};
+    #[test]
+    fn test_version() {
+        let major = crate::ffi::versionMajor();
+        let minor = crate::ffi::versionMinor();
+        let patch = crate::ffi::versionPatch();
+        let ver_int = crate::ffi::versionInteger();
+        assert_eq!(ver_int, major * 10000 + minor * 100 + patch);
+    }
 
     #[test]
-    fn test_read_stuff() {
-        const BUF_SIZE: usize = 1000;
-        let mut buffer = [0 as c_char; BUF_SIZE];
-        let data = unsafe {
-            let len = PDALFullVersionString(buffer.as_mut_ptr(), BUF_SIZE as size_t);
-            assert!((len as usize) < BUF_SIZE);
-            let byte_slice = std::slice::from_raw_parts(buffer.as_ptr() as *const u8, len as usize);
-            CString::new(byte_slice).unwrap()
-        };
-
-        assert!(!data.is_empty())
+    fn test_version_string() {
+        let full_version = crate::ffi::fullVersionString();
+        let version = crate::ffi::versionString();
+        let sha1 = crate::ffi::sha1();
+        assert!(!full_version.is_empty());
+        assert!(!version.is_empty());
+        assert!(!sha1.is_empty());
+        assert!(full_version.contains(&sha1));
+    }
+    
+    #[test]
+    fn test_feature() {
+        // Expect at least one of these to be true
+        assert!(
+            crate::ffi::hasFeature(crate::ffi::Feature::LAZPERF) ||
+                crate::ffi::hasFeature(crate::ffi::Feature::ZSTD) ||
+                crate::ffi::hasFeature(crate::ffi::Feature::ZLIB) ||
+                crate::ffi::hasFeature(crate::ffi::Feature::LZMA) ||
+                crate::ffi::hasFeature(crate::ffi::Feature::LIBXML2)
+        );
     }
 }
