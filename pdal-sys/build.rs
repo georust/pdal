@@ -18,6 +18,7 @@
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use std::error::Error;
+use std::path::PathBuf;
 use cxx_build::CFG;
 
 // See https://github.com/alexcrichton/curl-rust/blob/0.4.34/curl-sys/build.rs
@@ -39,16 +40,26 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     CFG.exported_header_dirs.extend(pdal_pkg_config.include_paths.iter().map(|p| p.as_path()));
+    
+    let modules = ["config", "options", "pipeline"];
+    let module_files = modules.iter().map(|&m| PathBuf::from(format!("src/{m}/mod.rs"))).collect::<Vec<_>>();
 
-    cxx_build::bridge("src/lib.rs")  // returns a cc::Build
-        .file("src/bridge.cpp")
-        .flag_if_supported("-std=c++17")
-        .cargo_warnings(false)
-        .compile("pdal-sys");
+    let mut builder = cxx_build::bridges(module_files);
+    builder
+        .flag_if_supported("-std=c++14")
+        .cargo_warnings(false);
 
-    println!("cargo:rerun-if-changed=src/lib.rs");
-    println!("cargo:rerun-if-changed=src/bridge.cpp");
-    println!("cargo:rerun-if-changed=src/bridge.hpp");
+    for m in modules.iter() {
+        builder.file(format!("src/{m}/{m}.cpp"));
+    }
+    
+    builder.compile("pdal-sys");
+    
+    for m in modules.iter() {
+        println!("cargo:rerun-if-changed=src/{m}/mod.rs");
+        println!("cargo:rerun-if-changed=src/{m}/{m}.cpp");
+        println!("cargo:rerun-if-changed=src/{m}/{m}.hpp");
+    }
 
     Ok(())
 }

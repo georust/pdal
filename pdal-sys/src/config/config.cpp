@@ -1,4 +1,4 @@
-#include "pdal-sys/src/bridge.hpp"
+#include "pdal-sys/src/config/config.hpp"
 
 namespace pdal_sys {
     namespace Config {
