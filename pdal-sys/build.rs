@@ -41,7 +41,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     CFG.exported_header_dirs.extend(pdal_pkg_config.include_paths.iter().map(|p| p.as_path()));
     
-    let modules = ["config", "options", "pipeline"];
+    let modules = ["config", "options", "pipeline_manager", "pipeline"];
     let module_files = modules.iter().map(|&m| PathBuf::from(format!("src/{m}/mod.rs"))).collect::<Vec<_>>();
 
     let mut builder = cxx_build::bridges(module_files);

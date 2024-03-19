@@ -5,8 +5,8 @@ pub mod ffi {
     unsafe extern "C++" {
         include!("pdal-sys/src/options/options.hpp");
         type Options;
-        fn new_options() -> UniquePtr<Options>;
-        fn add(&self, name: &str, value: &str);
+        fn create_options() -> UniquePtr<Options>;
+        fn add(self: Pin<&mut Options>, name: &str, value: &str);
     }
 }
 
@@ -14,7 +14,7 @@ pub mod ffi {
 mod tests {
     #[test]
     fn test_new_options() {
-        let mut o = super::ffi::new_options();
-        o.add("foo", "bar");
+        let mut o = super::ffi::create_options();
+        o.pin_mut().add("foo", "bar");
     }
 }
