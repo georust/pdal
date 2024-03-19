@@ -9,10 +9,13 @@ public:
     PipelineManager();
     void readPipeline(rust::Str json);
     void readPipelineFromFile(rust::Str path);
-    
+    bool pipelineStreamable() const;
+    std::size_t execute();
+    void executeStreamed();
+
 private:
     std::unique_ptr<pdal::PipelineManager> m_impl;
 };
 
-std::unique_ptr<PipelineManager> create_pipeline_manager();
+std::unique_ptr<PipelineManager> createPipelineManager();
 }

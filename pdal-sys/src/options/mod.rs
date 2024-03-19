@@ -1,10 +1,11 @@
 #![allow(dead_code)]
 #[cxx::bridge]
 pub mod ffi {
-    #[namespace = "pdal_sys"]   
+    #[namespace = "pdal_sys"]
     unsafe extern "C++" {
         include!("pdal-sys/src/options/options.hpp");
         type Options;
+        #[cxx_name = "createOptions"]
         fn create_options() -> UniquePtr<Options>;
         fn add(self: Pin<&mut Options>, name: &str, value: &str);
     }

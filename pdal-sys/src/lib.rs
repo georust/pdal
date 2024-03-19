@@ -1,4 +1,6 @@
-pub mod config;
-pub mod pipeline;
-pub mod pipeline_manager;
-pub mod options;
+mod config;
+mod options;
+mod pipeline_manager;
+
+pub use config::ffi::*;
+pub use pipeline_manager::*;

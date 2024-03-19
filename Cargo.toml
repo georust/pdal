@@ -6,8 +6,8 @@ version = "0.1.0"
 categories = ["science::geo", "api-bindings"]
 edition = "2021"
 
-#[workspace]
-#members = [".", "pdal-sys"]
+[workspace]
+members = [".", "pdal-sys"]
 
 [dependencies]
 pdal-sys = { path = "pdal-sys" }

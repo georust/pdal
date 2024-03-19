@@ -12,5 +12,5 @@ private:
     std::unique_ptr<pdal::Options> m_impl;
 };
 
-std::unique_ptr<Options> create_options();
+std::unique_ptr<Options> createOptions();
 }

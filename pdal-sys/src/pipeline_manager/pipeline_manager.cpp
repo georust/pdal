@@ -3,6 +3,9 @@
 #include <sstream>
 
 namespace pdal_sys {
+    std::unique_ptr<PipelineManager> createPipelineManager() {
+        return std::unique_ptr<PipelineManager>(new PipelineManager());
+    }
 
     PipelineManager::PipelineManager() : m_impl(std::unique_ptr<pdal::PipelineManager>(new pdal::PipelineManager)) {}
 
@@ -14,8 +17,16 @@ namespace pdal_sys {
     void PipelineManager::readPipelineFromFile(rust::Str path) {
         m_impl->readPipeline(std::string(path));
     }
-    std::unique_ptr<PipelineManager> create_pipeline_manager() {
-        return std::unique_ptr<PipelineManager>(new PipelineManager());
+
+    bool PipelineManager::pipelineStreamable() const {
+        return m_impl->pipelineStreamable();
     }
 
+    std::size_t PipelineManager::execute() {
+        return m_impl->execute();
+    }
+
+    void PipelineManager::executeStreamed() {
+         m_impl->execute(pdal::ExecMode::PreferStream);
+    }
 }

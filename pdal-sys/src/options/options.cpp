@@ -9,7 +9,7 @@ namespace pdal_sys {
     }
 
     // Rust constructor
-    std::unique_ptr<Options> create_options() {
+    std::unique_ptr<Options> createOptions() {
         return std::unique_ptr<Options>(new Options());
     }
 }

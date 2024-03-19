@@ -17,9 +17,11 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+use cxx_build::CFG;
 use std::error::Error;
 use std::path::PathBuf;
-use cxx_build::CFG;
+
+static MODULES: &[&str] = &["config", "options", "pipeline_manager"];
 
 // See https://github.com/alexcrichton/curl-rust/blob/0.4.34/curl-sys/build.rs
 // for inspiration.
@@ -39,23 +41,26 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
-    CFG.exported_header_dirs.extend(pdal_pkg_config.include_paths.iter().map(|p| p.as_path()));
-    
-    let modules = ["config", "options", "pipeline_manager", "pipeline"];
-    let module_files = modules.iter().map(|&m| PathBuf::from(format!("src/{m}/mod.rs"))).collect::<Vec<_>>();
+    CFG.exported_header_dirs
+        .extend(pdal_pkg_config.include_paths.iter().map(|p| p.as_path()));
+
+    let module_files = MODULES
+        .iter()
+        .map(|&m| PathBuf::from(format!("src/{m}/mod.rs")))
+        .collect::<Vec<_>>();
 
     let mut builder = cxx_build::bridges(module_files);
     builder
         .flag_if_supported("-std=c++14")
         .cargo_warnings(false);
 
-    for m in modules.iter() {
+    for m in MODULES {
         builder.file(format!("src/{m}/{m}.cpp"));
     }
-    
+
     builder.compile("pdal-sys");
-    
-    for m in modules.iter() {
+
+    for m in MODULES {
         println!("cargo:rerun-if-changed=src/{m}/mod.rs");
         println!("cargo:rerun-if-changed=src/{m}/{m}.cpp");
         println!("cargo:rerun-if-changed=src/{m}/{m}.hpp");

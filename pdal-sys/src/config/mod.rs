@@ -27,27 +27,39 @@ pub mod ffi {
         ZSTD,
         ZLIB,
         LZMA,
-        LIBXML2
+        LIBXML2,
     }
-    
+
+    // These functions are bound directly since they return primitives.
     #[namespace = "pdal::Config"]
     unsafe extern "C++" {
         include!("pdal-sys/src/config/config.hpp");
         type Feature;
-        fn hasFeature(f: Feature) -> bool;
-        fn versionInteger() -> i32;
-        fn versionMajor() -> i32;
-        fn versionMinor() -> i32;
-        fn versionPatch() -> i32;
+        #[cxx_name = "hasFeature"]
+        fn has_feature(f: Feature) -> bool;
+        #[cxx_name = "versionInteger"]
+        fn version_integer() -> i32;
+        #[cxx_name = "versionMajor"]
+        fn version_major() -> i32;
+        #[cxx_name = "versionMinor"]
+        fn version_minor() -> i32;
+        #[cxx_name = "versionPatch"]
+        fn version_patch() -> i32;
     }
+
+    // These functions require wrappers to translate the Rust types to C++
     #[namespace = "pdal_sys::Config"]
     unsafe extern "C++" {
         include!("pdal-sys/src/config/config.hpp");
-        fn fullVersionString() -> String;
-        fn versionString() -> String;
+        #[cxx_name = "fullVersionString"]
+        fn full_version_string() -> String;
+        #[cxx_name = "versionString"]
+        fn version_string() -> String;
         fn sha1() -> String;
-        fn debugInformation() -> String;
-        fn pluginInstallPath() -> String;
+        #[cxx_name = "debugInformation"]
+        fn debug_information() -> String;
+        #[cxx_name = "pluginInstallPath"]
+        fn plugin_install_path() -> String;
     }
 }
 
@@ -57,33 +69,33 @@ mod tests {
 
     #[test]
     fn test_version() {
-        let major = super::ffi::versionMajor();
-        let minor = super::ffi::versionMinor();
-        let patch = super::ffi::versionPatch();
-        let ver_int = super::ffi::versionInteger();
+        let major = super::ffi::version_major();
+        let minor = super::ffi::version_minor();
+        let patch = super::ffi::version_patch();
+        let ver_int = super::ffi::version_integer();
         assert_eq!(ver_int, major * 10000 + minor * 100 + patch);
     }
 
     #[test]
     fn test_version_string() {
-        let full_version = super::ffi::fullVersionString();
-        let version = super::ffi::versionString();
+        let full_version = super::ffi::full_version_string();
+        let version = super::ffi::version_string();
         let sha1 = super::ffi::sha1();
         assert!(!full_version.is_empty());
         assert!(!version.is_empty());
         assert!(!sha1.is_empty());
         assert!(full_version.contains(&sha1));
     }
-    
+
     #[test]
     fn test_feature() {
         // Expect at least one of these to be true
         assert!(
-            super::ffi::hasFeature(Feature::LAZPERF) ||
-                super::ffi::hasFeature(Feature::ZSTD) ||
-                super::ffi::hasFeature(Feature::ZLIB) ||
-                super::ffi::hasFeature(Feature::LZMA) ||
-                super::ffi::hasFeature(Feature::LIBXML2)
+            super::ffi::has_feature(Feature::LAZPERF)
+                || super::ffi::has_feature(Feature::ZSTD)
+                || super::ffi::has_feature(Feature::ZLIB)
+                || super::ffi::has_feature(Feature::LZMA)
+                || super::ffi::has_feature(Feature::LIBXML2)
         );
     }
 }
