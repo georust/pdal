@@ -19,17 +19,8 @@
 
 #pragma once
 #include "rust/cxx.h"
-#include <pdal/Options.hpp>
+#include <pdal/pdal.hpp>
 
-namespace pdal_sys
-{
-class Options {
-public:
-    Options();
-    void add(rust::Str name, rust::Str value);
-private:
-    std::unique_ptr<pdal::Options> m_impl;
-};
-
-std::unique_ptr<Options> createOptions();
+namespace pdal_sys {
+    using PointViewSet = pdal::PointViewSet;
 }

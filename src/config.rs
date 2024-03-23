@@ -33,12 +33,12 @@ pub struct Config {
 impl Config {
     pub fn new() -> Result<Self> {
         Ok(Self {
-            version: pdal_sys::version_string(),
-            major: pdal_sys::version_major(),
-            minor: pdal_sys::version_minor(),
-            patch: pdal_sys::version_patch(),
-            sha: pdal_sys::sha1(),
-            plugin_path: pdal_sys::plugin_install_path().into(),
+            version: pdal_sys::config::version_string(),
+            major: pdal_sys::config::version_major(),
+            minor: pdal_sys::config::version_minor(),
+            patch: pdal_sys::config::version_patch(),
+            sha: pdal_sys::config::sha1(),
+            plugin_path: pdal_sys::config::plugin_install_path().into(),
         })
     }
 }

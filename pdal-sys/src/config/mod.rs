@@ -63,6 +63,8 @@ pub mod ffi {
     }
 }
 
+pub use ffi::*;
+
 #[cfg(test)]
 mod tests {
     use super::ffi::Feature;

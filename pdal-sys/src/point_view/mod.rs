@@ -17,19 +17,18 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#pragma once
-#include "rust/cxx.h"
-#include <pdal/Options.hpp>
+#![allow(dead_code)]
 
-namespace pdal_sys
-{
-class Options {
-public:
-    Options();
-    void add(rust::Str name, rust::Str value);
-private:
-    std::unique_ptr<pdal::Options> m_impl;
-};
+#[cxx::bridge]
+pub mod ffi {
+    #[namespace = "pdal_sys"]
+    unsafe extern "C++" {
+        include!("pdal-sys/src/point_view/point_view.hpp");
+        type PointViewSet;
 
-std::unique_ptr<Options> createOptions();
+    }
+
 }
+
+#[cfg(test)]
+mod tests {}

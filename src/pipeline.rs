@@ -5,6 +5,25 @@
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software
 // and associated documentation files (the "Software"), to deal in the Software without restriction,
 // including without limitation the rights to use, copy, modify, merge, publish, distribute,
+// sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all copies or
+// substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+// BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
+// OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+// MIT License
+//
+// Copyright (c) 2024 NUVIEW, Inc. <simeon.fitch@nuview.space>
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the "Software"), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute,
 // sublicense, and/or sell copies of the Software, and to permit persons to whom the Software iString furnished to do so, subject to the following conditions:
 //
 // The above copyright notice and this permission notice shall be included in all copies or
@@ -81,17 +100,17 @@ impl ExecutedPipeline {
 
     /// Retrieves a pipeline's computed metadata
     pub fn metadata(&self) -> Result<String> {
-        todo!("Implement PDAL pipeline metadata retrieval")
+        Ok(self.pipeline.0.metadata()?)
     }
 
     /// Retrieves the full json string representation of an execute pipeline
     pub fn pipeline_json(&self) -> Result<String> {
-        todo!("Implement PDAL pipeline json retrieval")
+        Ok(self.pipeline.0.pipeline()?)
     }
 
     /// Retrieves a pipeline's computed schema.
     pub fn schema(&self) -> Result<String> {
-        todo!("Implement PDAL pipeline schema retrieval")
+        Ok(self.pipeline.0.schema()?)
     }
 }
 
@@ -125,6 +144,9 @@ mod test {
         let pipeline = Pipeline::new(json)?;
         let result = pipeline.execute()?;
         assert_eq!(result.point_count(), 110000);
+
+        let json_str= result.pipeline_json()?;
+        dbg!(&json_str);
         Ok(())
     }
 
