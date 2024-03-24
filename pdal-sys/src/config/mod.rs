@@ -19,7 +19,7 @@
 
 #![allow(dead_code)]
 #[cxx::bridge]
-pub mod ffi {
+mod ffi {
     #[namespace = "pdal::Config"]
     #[repr(u32)]
     enum Feature {
@@ -67,22 +67,22 @@ pub use ffi::*;
 
 #[cfg(test)]
 mod tests {
-    use super::ffi::Feature;
+    use super::*;
 
     #[test]
     fn test_version() {
-        let major = super::ffi::version_major();
-        let minor = super::ffi::version_minor();
-        let patch = super::ffi::version_patch();
-        let ver_int = super::ffi::version_integer();
+        let major = version_major();
+        let minor = version_minor();
+        let patch = version_patch();
+        let ver_int = version_integer();
         assert_eq!(ver_int, major * 10000 + minor * 100 + patch);
     }
 
     #[test]
     fn test_version_string() {
-        let full_version = super::ffi::full_version_string();
-        let version = super::ffi::version_string();
-        let sha1 = super::ffi::sha1();
+        let full_version = full_version_string();
+        let version = version_string();
+        let sha1 = sha1();
         assert!(!full_version.is_empty());
         assert!(!version.is_empty());
         assert!(!sha1.is_empty());
@@ -93,11 +93,11 @@ mod tests {
     fn test_feature() {
         // Expect at least one of these to be true
         assert!(
-            super::ffi::has_feature(Feature::LAZPERF)
-                || super::ffi::has_feature(Feature::ZSTD)
-                || super::ffi::has_feature(Feature::ZLIB)
-                || super::ffi::has_feature(Feature::LZMA)
-                || super::ffi::has_feature(Feature::LIBXML2)
+            has_feature(Feature::LAZPERF)
+                || has_feature(Feature::ZSTD)
+                || has_feature(Feature::ZLIB)
+                || has_feature(Feature::LZMA)
+                || has_feature(Feature::LIBXML2)
         );
     }
 }

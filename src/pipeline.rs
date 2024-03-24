@@ -145,8 +145,8 @@ mod test {
         let result = pipeline.execute()?;
         assert_eq!(result.point_count(), 110000);
 
-        let json_str= result.pipeline_json()?;
-        dbg!(&json_str);
+        let json_str = result.pipeline_json()?;
+        assert!(json_str.contains("autzen_trim.laz"));
         Ok(())
     }
 

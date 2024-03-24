@@ -5,9 +5,10 @@ license = "MIT"
 version = "0.1.0"
 categories = ["science::geo", "api-bindings"]
 edition = "2021"
+repository = "https://github.com/georust/pdal"
 
 [workspace]
-members = [".", "pdal-sys"]
+members = ["pdal-sys"]
 
 [dependencies]
 pdal-sys = { path = "pdal-sys" }

@@ -18,8 +18,20 @@
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 pub mod config;
-mod options;
 mod pipeline_manager;
 mod point_view;
 
 pub use pipeline_manager::*;
+pub use point_view::*;
+
+#[cfg(test)]
+pub(crate) mod testkit {
+    use once_cell::sync::Lazy;
+    use std::path::Path;
+    pub static DATA_DIR: Lazy<&Path> = Lazy::new(|| Path::new(env!("TEST_DATA_DIR")));
+    pub static TEST_WD: Lazy<&Path> = Lazy::new(|| Path::new(env!("PKG_DIR")));
+
+    pub fn data_file_path(name: &str) -> String {
+        DATA_DIR.join(name).to_string_lossy().to_string()
+    }
+}

@@ -20,15 +20,49 @@
 #![allow(dead_code)]
 
 #[cxx::bridge]
-pub mod ffi {
+mod ffi {
     #[namespace = "pdal_sys"]
     unsafe extern "C++" {
         include!("pdal-sys/src/point_view/point_view.hpp");
         type PointViewSet;
-
+        type PointViewIter;
+        type PointView;
+        fn len(set: &PointViewSet) -> usize;
+        fn iter(set: &PointViewSet) -> UniquePtr<PointViewIter>;
+        fn hasNext(self: &PointViewIter) -> bool;
+        fn next(self: Pin<&mut PointViewIter>) -> Result<SharedPtr<PointView>>;
     }
-
 }
 
+pub use ffi::*;
+
+// pub struct PointViewIter<'pipelne>(&'pipelne PointViewSet, usize);
+
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use super::*;
+    use crate::create_pipeline_manager;
+    use crate::testkit::*;
+    use std::any::Any;
+
+    #[test]
+    fn test_get_views() {
+        std::env::set_current_dir(TEST_WD.to_path_buf()).unwrap();
+        let mut mgr = create_pipeline_manager();
+        mgr.pin_mut()
+            .read_pipeline_from_file(&data_file_path("info.json"))
+            .unwrap();
+        let _ = mgr.pin_mut().execute().unwrap();
+        let r = mgr.views();
+        assert!(r.is_ok());
+        let vs = r.unwrap();
+        assert_eq!(crate::point_view::ffi::len(vs), 1);
+
+        let mut iter = crate::point_view::ffi::iter(&vs);
+
+        while iter.hasNext() {
+            let view = iter.pin_mut().next().unwrap();
+            println!("view: {:?}", view.type_id());
+        }
+    }
+}

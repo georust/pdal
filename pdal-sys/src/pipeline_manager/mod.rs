@@ -23,7 +23,7 @@ use cxx::UniquePtr;
 use std::fmt::Debug;
 
 #[cxx::bridge]
-pub mod ffi {
+mod ffi {
     #[namespace = "pdal_sys"]
     unsafe extern "C++" {
         include!("pdal-sys/src/pipeline_manager/pipeline_manager.hpp");
@@ -39,21 +39,21 @@ pub mod ffi {
         fn execute(self: Pin<&mut PipelineManager>) -> Result<usize>;
         #[cxx_name = "executeStreamed"]
         fn execute_streamed(self: Pin<&mut PipelineManager>) -> Result<()>;
-        type PointViewSet = crate::point_view::ffi::PointViewSet;
+        type PointViewSet = crate::point_view::PointViewSet;
         fn views(self: &PipelineManager) -> Result<&PointViewSet>;
         fn metadata(self: &PipelineManager) -> Result<String>;
         fn schema(self: &PipelineManager) -> Result<String>;
         fn pipeline(self: &PipelineManager) -> Result<String>;
     }
 }
+pub use ffi::{create_pipeline_manager, PipelineManager};
 
-pub type PipelineManager = ffi::PipelineManager;
 impl PipelineManager {
     pub fn new() -> UniquePtr<ffi::PipelineManager> {
-        ffi::create_pipeline_manager()
+        create_pipeline_manager()
     }
 }
-pub type PipelineManagerPtr = UniquePtr<ffi::PipelineManager>;
+pub type PipelineManagerPtr = UniquePtr<PipelineManager>;
 
 impl Debug for PipelineManager {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -63,7 +63,8 @@ impl Debug for PipelineManager {
 
 #[cfg(test)]
 mod tests {
-    const PIPELINE_FILE: &str = "tests/data/info.json";
+    use super::ffi::create_pipeline_manager;
+    use crate::testkit::*;
 
     #[test]
     fn test_parse_pipeline() {
@@ -71,11 +72,11 @@ mod tests {
             r#"{ "pipeline": [ {"filename":"foobar.las", "spatialreference":"EPSG:2993" } ] }"#;
         let bad = r#"{"pipeline":[{"blah":"foobar.las"}]}"#;
 
-        let mut mgr = super::ffi::create_pipeline_manager();
+        let mut mgr = create_pipeline_manager();
         let r = mgr.pin_mut().read_pipeline(good);
         assert!(r.is_ok(), "Error: {:?}", r.err());
 
-        let mut mgr = super::ffi::create_pipeline_manager();
+        let mut mgr = create_pipeline_manager();
 
         let r = mgr.pin_mut().read_pipeline(bad);
         assert!(r.is_err());
@@ -84,9 +85,11 @@ mod tests {
 
     #[test]
     fn test_read_pipeline() {
-        std::env::set_current_dir("..").unwrap();
-        let mut mgr = super::ffi::create_pipeline_manager();
-        let r = mgr.pin_mut().read_pipeline_from_file(PIPELINE_FILE);
+        std::env::set_current_dir(TEST_WD.to_path_buf()).unwrap();
+        let mut mgr = create_pipeline_manager();
+        let r = mgr
+            .pin_mut()
+            .read_pipeline_from_file(&data_file_path("info.json"));
         assert!(r.is_ok(), "Error: {:?}", r.err());
         let r = mgr.pin_mut().execute();
         assert_eq!(r.unwrap(), 110000);

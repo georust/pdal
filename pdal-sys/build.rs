@@ -21,7 +21,7 @@ use cxx_build::CFG;
 use std::error::Error;
 use std::path::PathBuf;
 
-static MODULES: &[&str] = &["config", "options", "pipeline_manager"];
+static MODULES: &[&str] = &["config", "pipeline_manager", "point_view"];
 
 // See https://github.com/alexcrichton/curl-rust/blob/0.4.34/curl-sys/build.rs
 // for inspiration.

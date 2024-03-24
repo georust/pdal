@@ -23,4 +23,20 @@
 
 namespace pdal_sys {
     using PointViewSet = pdal::PointViewSet;
+    using PointView = pdal::PointView;
+    std::size_t len(const PointViewSet& set);
+
+    class PointViewIter
+    {
+    public:
+        PointViewIter(const pdal::PointViewSet& views);
+        bool hasNext() const;
+        pdal::PointViewPtr next();
+
+    private:
+        const pdal::PointViewSet &m_views;
+        pdal::PointViewSet::const_iterator m_impl;
+    };
+
+    std::unique_ptr<PointViewIter> iter(const PointViewSet& set);
 }

@@ -19,3 +19,28 @@
 
 #include "pdal-sys/src/point_view/point_view.hpp"
 
+namespace pdal_sys {
+    std::size_t len(const PointViewSet& set) {
+        return set.size();
+    }
+
+    std::unique_ptr<PointViewIter> iter(const PointViewSet& set) {
+        return std::unique_ptr<PointViewIter>(new PointViewIter(set));
+    }
+
+    PointViewIter::PointViewIter(const pdal::PointViewSet& views) :
+            m_views(views), m_impl(m_views.cbegin()) {}
+
+    bool PointViewIter::hasNext() const {
+        return (m_impl != m_views.cend());
+    }
+
+    pdal::PointViewPtr PointViewIter::next() {
+        if (!hasNext()) {
+            throw std::out_of_range("No more elements in iterator");
+        }
+        else {
+            return *(m_impl++);
+        }
+    }
+}
