@@ -28,29 +28,25 @@ mod ffi {
     unsafe extern "C++" {
         include!("pdal-sys/src/pipeline_manager/pipeline_manager.hpp");
         type PipelineManager;
-        #[cxx_name = "createPipelineManager"]
-        fn create_pipeline_manager() -> UniquePtr<PipelineManager>;
-        #[cxx_name = "readPipeline"]
-        fn read_pipeline(self: Pin<&mut PipelineManager>, pipeline: &str) -> Result<()>;
-        #[cxx_name = "readPipelineFromFile"]
-        fn read_pipeline_from_file(self: Pin<&mut PipelineManager>, path: &str) -> Result<()>;
-        #[cxx_name = "pipelineStreamable"]
-        fn pipeline_streamable(self: &PipelineManager) -> bool;
-        fn execute(self: Pin<&mut PipelineManager>) -> Result<usize>;
-        #[cxx_name = "executeStreamed"]
-        fn execute_streamed(self: Pin<&mut PipelineManager>) -> Result<()>;
+        #[namespace = "pdal_sys::point_view_set"]
         type PointViewSet = crate::point_view::PointViewSet;
+        fn createPipelineManager() -> UniquePtr<PipelineManager>;
+        fn readPipeline(self: Pin<&mut PipelineManager>, pipeline: &str) -> Result<()>;
+        fn readPipelineFromFile(self: Pin<&mut PipelineManager>, path: &str) -> Result<()>;
+        fn pipelineStreamable(self: &PipelineManager) -> bool;
+        fn execute(self: Pin<&mut PipelineManager>) -> Result<usize>;
+        fn executeStreamed(self: Pin<&mut PipelineManager>) -> Result<()>;
         fn views(self: &PipelineManager) -> Result<&PointViewSet>;
         fn metadata(self: &PipelineManager) -> Result<String>;
         fn schema(self: &PipelineManager) -> Result<String>;
         fn pipeline(self: &PipelineManager) -> Result<String>;
     }
 }
-pub use ffi::{create_pipeline_manager, PipelineManager};
+pub use ffi::{createPipelineManager, PipelineManager};
 
 impl PipelineManager {
     pub fn new() -> UniquePtr<ffi::PipelineManager> {
-        create_pipeline_manager()
+        createPipelineManager()
     }
 }
 pub type PipelineManagerPtr = UniquePtr<PipelineManager>;
@@ -63,7 +59,7 @@ impl Debug for PipelineManager {
 
 #[cfg(test)]
 mod tests {
-    use super::ffi::create_pipeline_manager;
+    use super::ffi::createPipelineManager;
     use crate::testkit::*;
 
     #[test]
@@ -72,13 +68,13 @@ mod tests {
             r#"{ "pipeline": [ {"filename":"foobar.las", "spatialreference":"EPSG:2993" } ] }"#;
         let bad = r#"{"pipeline":[{"blah":"foobar.las"}]}"#;
 
-        let mut mgr = create_pipeline_manager();
-        let r = mgr.pin_mut().read_pipeline(good);
+        let mut mgr = createPipelineManager();
+        let r = mgr.pin_mut().readPipeline(good);
         assert!(r.is_ok(), "Error: {:?}", r.err());
 
-        let mut mgr = create_pipeline_manager();
+        let mut mgr = createPipelineManager();
 
-        let r = mgr.pin_mut().read_pipeline(bad);
+        let r = mgr.pin_mut().readPipeline(bad);
         assert!(r.is_err());
         assert!(r.err().unwrap().to_string().contains("reader"));
     }
@@ -86,10 +82,10 @@ mod tests {
     #[test]
     fn test_read_pipeline() {
         std::env::set_current_dir(TEST_WD.to_path_buf()).unwrap();
-        let mut mgr = create_pipeline_manager();
+        let mut mgr = createPipelineManager();
         let r = mgr
             .pin_mut()
-            .read_pipeline_from_file(&data_file_path("info.json"));
+            .readPipelineFromFile(&data_file_path("info.json"));
         assert!(r.is_ok(), "Error: {:?}", r.err());
         let r = mgr.pin_mut().execute();
         assert_eq!(r.unwrap(), 110000);

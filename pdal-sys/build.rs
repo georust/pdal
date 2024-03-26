@@ -21,7 +21,7 @@ use cxx_build::CFG;
 use std::error::Error;
 use std::path::PathBuf;
 
-static MODULES: &[&str] = &["config", "pipeline_manager", "point_view"];
+static MODULES: &[&str] = &["config", "pipeline_manager", "layout", "point_view"];
 
 // See https://github.com/alexcrichton/curl-rust/blob/0.4.34/curl-sys/build.rs
 // for inspiration.
@@ -29,6 +29,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     // std::env::set_var("RUST_LOG", "bindgen=info");
     // let _ = env_logger::builder().is_test(true).try_init()?;
     let mut pdal_pkg_config = pkg_config::Config::new().probe("pdal")?;
+
     // For some reason pkg-config reports a path like `/foo/bar/include/pdal`, but
     // internal C++ references assume that the path is `/foo/bar/include`.
     if let Some(pdal_inc) = pdal_pkg_config

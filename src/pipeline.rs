@@ -50,13 +50,13 @@ impl Pipeline {
     pub fn new<J: Into<PdalJson>>(pdal_json: J) -> Result<Self> {
         let json: PdalJson = pdal_json.try_into()?;
         let mut mgr = PipelineManager::new();
-        mgr.pin_mut().read_pipeline(&json.to_string())?;
+        mgr.pin_mut().readPipeline(&json.to_string())?;
         Ok(Self(mgr))
     }
 
     /// Determine if the pipeline is streamable.
     pub fn is_streamable(&self) -> bool {
-        self.0.pipeline_streamable()
+        self.0.pipelineStreamable()
     }
 
     /// Execute the pipeline.
@@ -71,7 +71,7 @@ impl Pipeline {
     ///
     /// Note: number of points produced is not available when run in streamed mode.
     pub fn execute_streamed(mut self) -> Result<ExecutedPipeline> {
-        self.0.pin_mut().execute_streamed()?;
+        self.0.pin_mut().executeStreamed()?;
         Ok(ExecutedPipeline::new(self, 0))
     }
 }

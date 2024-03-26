@@ -18,25 +18,47 @@
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #pragma once
+
 #include "rust/cxx.h"
 #include <pdal/pdal.hpp>
+#include <utility>
+#include "pdal-sys/src/layout/layout.hpp"
 
 namespace pdal_sys {
-    using PointViewSet = pdal::PointViewSet;
-    using PointView = pdal::PointView;
-    std::size_t len(const PointViewSet& set);
 
-    class PointViewIter
-    {
-    public:
-        PointViewIter(const pdal::PointViewSet& views);
-        bool hasNext() const;
-        pdal::PointViewPtr next();
+    namespace point_view {
+        using PointView = pdal::PointView;
+        int id(const PointView &view);
+        const pdal::PointLayout& layout(const PointView& view);
+    }
 
-    private:
-        const pdal::PointViewSet &m_views;
-        pdal::PointViewSet::const_iterator m_impl;
-    };
+    namespace point_view_set {
+        using PointViewSet = pdal::PointViewSet;
+    }
 
-    std::unique_ptr<PointViewIter> iter(const PointViewSet& set);
+    namespace point_view_iter {
+        class PointViewIter {
+        public:
+            explicit PointViewIter(const pdal::PointViewSet &views);
+
+            bool hasNext() const;
+
+            pdal::PointViewPtr next();
+
+        private:
+            const pdal::PointViewSet &m_views;
+            pdal::PointViewSet::const_iterator m_impl;
+        };
+
+        std::unique_ptr<PointViewIter> iter(const point_view_set::PointViewSet &set);
+    }
+
+    namespace point_view_set {
+
+        using pdal_sys::point_view_iter::PointViewIter;
+
+        std::unique_ptr<PointViewIter> iter(const PointViewSet &set);
+    }
+
+
 }

@@ -18,9 +18,11 @@
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 pub mod config;
+mod layout;
 mod pipeline_manager;
 mod point_view;
 
+pub use layout::*;
 pub use pipeline_manager::*;
 pub use point_view::*;
 

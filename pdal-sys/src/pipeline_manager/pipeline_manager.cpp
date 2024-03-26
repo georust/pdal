@@ -48,7 +48,8 @@ namespace pdal_sys {
     void PipelineManager::executeStreamed() {
          m_impl->execute(pdal::ExecMode::PreferStream);
     }
-    
+
+    using pdal_sys::point_view_set::PointViewSet;
     const PointViewSet& PipelineManager::views() const {
         return m_impl->views();
     }

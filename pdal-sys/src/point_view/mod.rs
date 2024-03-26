@@ -21,48 +21,70 @@
 
 #[cxx::bridge]
 mod ffi {
-    #[namespace = "pdal_sys"]
+    #[namespace = "pdal_sys::point_view_set"]
     unsafe extern "C++" {
         include!("pdal-sys/src/point_view/point_view.hpp");
         type PointViewSet;
-        type PointViewIter;
-        type PointView;
-        fn len(set: &PointViewSet) -> usize;
+        #[cxx_name = "size"]
+        fn len(self: &PointViewSet) -> usize;
         fn iter(set: &PointViewSet) -> UniquePtr<PointViewIter>;
+    }
+
+    #[namespace = "pdal_sys::point_view_iter"]
+    unsafe extern "C++" {
+        type PointViewIter;
         fn hasNext(self: &PointViewIter) -> bool;
         fn next(self: Pin<&mut PointViewIter>) -> Result<SharedPtr<PointView>>;
+    }
+
+    #[namespace = "pdal_sys::point_view"]
+    unsafe extern "C++" {
+        type PointView;
+        fn id(self: &PointView) -> i32;
+        #[cxx_name = "size"]
+        fn len(self: &PointView) -> u64;
+        #[namespace = "pdal_sys::layout"]
+        type PointLayout = crate::layout::PointLayout;
+        fn layout(pv: &PointView) -> &PointLayout;
     }
 }
 
 pub use ffi::*;
+use std::fmt::{Debug, Formatter};
 
-// pub struct PointViewIter<'pipelne>(&'pipelne PointViewSet, usize);
+impl Debug for PointView {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("PointView")
+            .field("id", &self.id())
+            .field("len", &self.len())
+            .finish()
+    }
+}
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::create_pipeline_manager;
     use crate::testkit::*;
-    use std::any::Any;
+    use crate::{createPipelineManager, layout};
 
     #[test]
     fn test_get_views() {
         std::env::set_current_dir(TEST_WD.to_path_buf()).unwrap();
-        let mut mgr = create_pipeline_manager();
+        let mut mgr = createPipelineManager();
         mgr.pin_mut()
-            .read_pipeline_from_file(&data_file_path("info.json"))
+            .readPipelineFromFile(&data_file_path("info.json"))
             .unwrap();
         let _ = mgr.pin_mut().execute().unwrap();
         let r = mgr.views();
         assert!(r.is_ok());
         let vs = r.unwrap();
-        assert_eq!(crate::point_view::ffi::len(vs), 1);
+        assert_eq!(vs.len(), 1);
 
         let mut iter = crate::point_view::ffi::iter(&vs);
+        assert!(iter.hasNext());
 
-        while iter.hasNext() {
-            let view = iter.pin_mut().next().unwrap();
-            println!("view: {:?}", view.type_id());
-        }
+        let view = iter.pin_mut().next().unwrap();
+        assert_eq!(view.id(), 1);
+
+        assert_eq!(layout(&view).pointSize(), 56);
     }
 }
