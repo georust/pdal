@@ -22,21 +22,18 @@
 
 namespace pdal_sys {
     namespace point_view_set {
-        using pdal_sys::point_view_iter::PointViewIter;
-        std::unique_ptr<PointViewIter> iter(const PointViewSet &set) {
-            return std::make_unique<PointViewIter>(set);
+        std::unique_ptr<PointViewSetIter> iter(const PointViewSet &set) {
+            return std::make_unique<PointViewSetIter>(set);
         }
-    }
-    namespace point_view_iter {
 
-        PointViewIter::PointViewIter(const pdal::PointViewSet &views) :
+        PointViewSetIter::PointViewSetIter(const pdal::PointViewSet &views) :
                 m_views(views), m_impl(m_views.cbegin()) {}
 
-        bool PointViewIter::hasNext() const {
+        bool PointViewSetIter::hasNext() const {
             return (m_impl != m_views.cend());
         }
 
-        pdal::PointViewPtr PointViewIter::next() {
+        pdal::PointViewPtr PointViewSetIter::next() {
             if (!hasNext()) {
                 throw std::out_of_range("No more elements in iterator");
             } else {
@@ -50,7 +47,18 @@ namespace pdal_sys {
             return view.id();
         }
 
+        rust::String proj4(const PointView& view) {
+            auto sr = view.spatialReference();
+            return sr.getProj4();
+        }
+
+        rust::String wkt(const PointView& view) {
+            auto sr = view.spatialReference();
+            return sr.getWKT();
+        }
+
         const pdal::PointLayout& layout(const PointView& view) {
+            // TODO: is this legit?
             return *view.layout();
         }
     }

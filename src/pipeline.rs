@@ -38,12 +38,12 @@
 use crate::error::Result;
 use crate::json::PdalJson;
 
-use crate::PointViewIter;
-use pdal_sys::PipelineManager;
+use crate::PointView;
+use pdal_sys::pipeline_manager::{PipelineManager, PipelineManagerPtr};
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug)]
-pub struct Pipeline(pdal_sys::PipelineManagerPtr);
+pub struct Pipeline(PipelineManagerPtr);
 
 impl Pipeline {
     /// Construct a new pipeline.
@@ -93,9 +93,9 @@ impl ExecutedPipeline {
     }
 
     /// Get an iterator over the point views produced by the pipeline.
-    pub fn point_views(&self) -> Result<PointViewIter> {
-        // Ok(PointViewIter::new(iter_handle))
-        todo!("Implement PDAL point view iteration")
+    pub fn point_views(&self) -> Result<Vec<PointView>> {
+        let v = self.pipeline.0.views()?;
+        Ok(v.iter().map(PointView).collect())
     }
 
     /// Retrieves a pipeline's computed metadata

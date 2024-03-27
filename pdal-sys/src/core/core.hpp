@@ -17,20 +17,44 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-pub mod config;
-pub mod core;
-pub mod layout;
-pub mod pipeline_manager;
-pub mod point_view;
 
-#[cfg(test)]
-pub(crate) mod testkit {
-    use once_cell::sync::Lazy;
-    use std::path::Path;
-    pub static DATA_DIR: Lazy<&Path> = Lazy::new(|| Path::new(env!("TEST_DATA_DIR")));
-    pub static TEST_WD: Lazy<&Path> = Lazy::new(|| Path::new(env!("PKG_DIR")));
+#pragma once
 
-    pub fn data_file_path(name: &str) -> String {
-        DATA_DIR.join(name).to_string_lossy().to_string()
+#include <iterator>
+#include "rust/cxx.h"
+//#include "pdal-sys/src/core/mod.rs.h"
+#include <pdal/pdal.hpp>
+
+namespace pdal_sys {
+    template <class T>
+    class VecIterator {
+    public:
+        explicit VecIterator(const std::vector<T> &vec) {
+            m_begin = vec.begin();
+            m_end = vec.end();
+        }
+
+        bool hasNext() const {
+            return m_begin != m_end;
+        }
+
+        const T& next() {
+            return *m_begin++;
+        }
+
+    private:
+        typename std::vector<T>::const_iterator m_begin;
+        typename std::vector<T>::const_iterator m_end;
+    };
+
+    namespace core {
+        using DimType = pdal::DimType;
+        typedef VecIterator<DimType> DimTypeIter;
+        using DimTypeId = pdal::Dimension::Id;
+        DimTypeId id(const DimType &dt);
+        using DimTypeRepr = pdal::Dimension::Type;
+        DimTypeRepr representation(const DimType &dt);
+        rust::String description(DimTypeId id);
+        rust::String name(DimTypeId id);
     }
 }

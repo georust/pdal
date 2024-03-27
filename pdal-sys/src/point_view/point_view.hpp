@@ -23,6 +23,7 @@
 #include <pdal/pdal.hpp>
 #include <utility>
 #include "pdal-sys/src/layout/layout.hpp"
+#include "pdal-sys/src/core/core.hpp"
 
 namespace pdal_sys {
 
@@ -30,16 +31,15 @@ namespace pdal_sys {
         using PointView = pdal::PointView;
         int id(const PointView &view);
         const pdal::PointLayout& layout(const PointView& view);
+        rust::String proj4(const PointView& view);
+        rust::String wkt(const PointView& view);
     }
 
     namespace point_view_set {
         using PointViewSet = pdal::PointViewSet;
-    }
-
-    namespace point_view_iter {
-        class PointViewIter {
+        class PointViewSetIter {
         public:
-            explicit PointViewIter(const pdal::PointViewSet &views);
+            explicit PointViewSetIter(const pdal::PointViewSet &views);
 
             bool hasNext() const;
 
@@ -50,15 +50,6 @@ namespace pdal_sys {
             pdal::PointViewSet::const_iterator m_impl;
         };
 
-        std::unique_ptr<PointViewIter> iter(const point_view_set::PointViewSet &set);
+        std::unique_ptr<PointViewSetIter> iter(const PointViewSet &set);
     }
-
-    namespace point_view_set {
-
-        using pdal_sys::point_view_iter::PointViewIter;
-
-        std::unique_ptr<PointViewIter> iter(const PointViewSet &set);
-    }
-
-
 }

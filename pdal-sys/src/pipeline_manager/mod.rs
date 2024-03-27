@@ -24,6 +24,7 @@ use std::fmt::Debug;
 
 #[cxx::bridge]
 mod ffi {
+
     #[namespace = "pdal_sys"]
     unsafe extern "C++" {
         include!("pdal-sys/src/pipeline_manager/pipeline_manager.hpp");

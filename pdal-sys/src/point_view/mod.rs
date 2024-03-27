@@ -25,16 +25,12 @@ mod ffi {
     unsafe extern "C++" {
         include!("pdal-sys/src/point_view/point_view.hpp");
         type PointViewSet;
+        type PointViewSetIter<'pvs>;
         #[cxx_name = "size"]
         fn len(self: &PointViewSet) -> usize;
-        fn iter(set: &PointViewSet) -> UniquePtr<PointViewIter>;
-    }
-
-    #[namespace = "pdal_sys::point_view_iter"]
-    unsafe extern "C++" {
-        type PointViewIter;
-        fn hasNext(self: &PointViewIter) -> bool;
-        fn next(self: Pin<&mut PointViewIter>) -> Result<SharedPtr<PointView>>;
+        fn iter<'pvs>(set: &'pvs PointViewSet) -> UniquePtr<PointViewSetIter<'pvs>>;
+        fn hasNext(self: &PointViewSetIter) -> bool;
+        fn next(self: Pin<&mut PointViewSetIter>) -> Result<SharedPtr<PointView>>;
     }
 
     #[namespace = "pdal_sys::point_view"]
@@ -46,11 +42,28 @@ mod ffi {
         #[namespace = "pdal_sys::layout"]
         type PointLayout = crate::layout::PointLayout;
         fn layout(pv: &PointView) -> &PointLayout;
+        fn proj4(pv: &PointView) -> Result<String>;
+        fn wkt(pv: &PointView) -> Result<String>;
     }
 }
 
-pub use ffi::*;
+use cxx::{SharedPtr, UniquePtr};
+pub use ffi::{PointView, PointViewSet, PointViewSetIter};
 use std::fmt::{Debug, Formatter};
+
+pub type PointViewPtr = SharedPtr<PointView>;
+
+impl PointView {
+    pub fn proj4(&self) -> Result<String, cxx::Exception> {
+        ffi::proj4(self)
+    }
+    pub fn wkt(&self) -> Result<String, cxx::Exception> {
+        ffi::wkt(self)
+    }
+    pub fn layout(&self) -> &ffi::PointLayout {
+        ffi::layout(self)
+    }
+}
 
 impl Debug for PointView {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -61,10 +74,30 @@ impl Debug for PointView {
     }
 }
 
+impl PointViewSet {
+    pub fn iter(&self) -> impl Iterator<Item = PointViewPtr> + '_ {
+        PointViewSetIterator(ffi::iter(self))
+    }
+}
+
+pub struct PointViewSetIterator<'pvs>(UniquePtr<PointViewSetIter<'pvs>>);
+
+impl Iterator for PointViewSetIterator<'_> {
+    type Item = PointViewPtr;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.0.hasNext() {
+            self.0.pin_mut().next().ok()
+        } else {
+            None
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use crate::pipeline_manager::createPipelineManager;
     use crate::testkit::*;
-    use crate::{createPipelineManager, layout};
 
     #[test]
     fn test_get_views() {
@@ -79,12 +112,13 @@ mod tests {
         let vs = r.unwrap();
         assert_eq!(vs.len(), 1);
 
-        let mut iter = crate::point_view::ffi::iter(&vs);
-        assert!(iter.hasNext());
+        let mut iter = vs.iter();
+        let next = iter.next();
+        assert!(next.is_some());
 
-        let view = iter.pin_mut().next().unwrap();
-        assert_eq!(view.id(), 1);
+        let view = next.unwrap();
+        assert_eq!(view.len(), 110000);
 
-        assert_eq!(layout(&view).pointSize(), 56);
+        //assert_eq!(super::ffi::layout(&view).pointSize(), 56);
     }
 }

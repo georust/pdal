@@ -21,6 +21,17 @@
 
 namespace pdal_sys {
     namespace layout {
+        std::unique_ptr<pdal_sys::core::DimTypeIter> dimTypes(const PointLayout &ps) {
+            return std::make_unique<pdal_sys::core::DimTypeIter>(ps.dimTypes());
+        }
+
+//        std::unique_ptr<std::vector<pdal_sys::core::DimType>> dimTypes(const PointLayout &ps) {
+//            return std::unique_ptr<std::vector<pdal_sys::core::DimType>>(ps.dimTypes());
+//        }
+
+//        std::unique_ptr<std::vector<pdal_sys::core::DimType>> dimTypes(const PointLayout &ps) {
+//            return std::unique_ptr<std::vector<pdal_sys::core::DimType>>(ps.dimTypes());
+//        }
 
     }
 }

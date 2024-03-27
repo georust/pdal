@@ -20,11 +20,11 @@
 #pragma once
 #include "rust/cxx.h"
 #include <pdal/pdal.hpp>
-#include <utility>
+#include "pdal-sys/src/core/core.hpp"
 
 namespace pdal_sys {
     namespace layout {
         using PointLayout = pdal::PointLayout;
+        std::unique_ptr<pdal_sys::core::DimTypeIter> dimTypes(const PointLayout &ps);
     }
-
 }
