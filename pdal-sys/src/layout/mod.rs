@@ -26,39 +26,47 @@ mod ffi {
         include!("pdal-sys/src/layout/layout.hpp");
         include!("pdal-sys/src/core/core.hpp");
         type PointLayout;
-        fn pointSize(self: &PointLayout) -> usize;
+        #[cxx_name = "pointSize"]
+        fn point_size(self: &PointLayout) -> usize;
         #[namespace = "pdal_sys::core"]
         type DimType = crate::core::DimType;
         #[namespace = "pdal_sys::core"]
-        type DimTypeIter<'a> = crate::core::DimTypeIter;
+        type DimTypeIter<'a> = crate::core::DimTypeIter<'a>;
         fn dimTypes<'pl>(pl: &'pl PointLayout) -> UniquePtr<DimTypeIter<'pl>>;
+
+        #[namespace = "pdal_sys::core"]
+        type DimTypeId = crate::core::DimTypeId;
+        fn dimOffset(self: &PointLayout, id: DimTypeId) -> Result<usize>;
+        fn dimSize(self: &PointLayout, id: DimTypeId) -> Result<usize>;
+
+        #[namespace = "pdal_sys::core"]
+        type DimIdIter = crate::core::DimIdIter;
+        fn dimIds(pl: &PointLayout) -> UniquePtr<DimIdIter>;
+
     }
 }
+pub use ffi::PointLayout;
 
-use cxx::UniquePtr;
-pub use ffi::*;
-use std::marker::PhantomData;
-use std::mem;
+use crate::core::*;
+use std::fmt::{Debug, Formatter};
 
 impl PointLayout {
+    #[inline]
     pub fn dim_types(&self) -> DimTypeIterator {
-        DimTypeIterator(ffi::dimTypes(self), PhantomData)
+        DimTypeIterator::new(ffi::dimTypes(self))
+    }
+
+    pub fn dim_ids(&self) -> DimIdIterator {
+        DimIdIterator(ffi::dimIds(self))
     }
 }
 
-pub struct DimTypeIterator<'a>(UniquePtr<DimTypeIter<'a>>, PhantomData<&'a ()>);
-
-impl<'a> Iterator for DimTypeIterator<'a> {
-    type Item = &'a DimType;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.0.hasNext() {
-            let v = self.0.pin_mut().next().ok()?;
-            // TODO: Make this ⇩ go away
-            unsafe { mem::transmute(v) }
-        } else {
-            None
-        }
+impl Debug for PointLayout {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("PointLayout")
+            .field("pointSize", &self.point_size())
+            .field("dimensions", &self.dim_types().collect::<Vec<_>>())
+            .finish_non_exhaustive()
     }
 }
 
@@ -81,10 +89,9 @@ mod tests {
         let next = iter.next();
         let view = next.unwrap();
         let layout = view.layout();
-        for d in layout.dim_types() {
-            println!("{:?}", d);
-        }
-
-        //assert_eq!(super::ffi::layout(&view).pointSize(), 56);
+        assert_eq!(
+            layout.point_size(),
+            layout.dim_types().map(|dt| dt.repr().size_bytes()).sum()
+        );
     }
 }

@@ -44,6 +44,7 @@ impl PointView {
     pub fn proj4(&self) -> Result<String> {
         Ok(self.0.proj4()?)
     }
+
     /// Get the CRS as a WKT string.
     pub fn wkt(&self) -> Result<String> {
         Ok(self.0.wkt()?)
@@ -62,7 +63,7 @@ impl Debug for PointView {
             .field("id", &self.id())
             .field("len", &self.len())
             .field("proj4", &Elided(&self.proj4().unwrap_or_default()))
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 
@@ -96,7 +97,8 @@ mod tests {
         let views = result.point_views()?;
         let view = views.first().ok_or("no point view")?;
         let layout = view.layout()?;
-        dbg!(&layout);
+        dbg!(layout.dimensions().collect::<Vec<_>>());
+
         //        let dims = layout.dimension_types()?;
         //        let point = view.get_packed_point(&dims, 0)?;
         //        assert_eq!(point.0.len(), 56);

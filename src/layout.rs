@@ -17,8 +17,7 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::error::Result;
-// use crate::{DimensionType, DimensionTypeList};
+use crate::{DimType, DimTypeId};
 use std::fmt::Debug;
 
 /// Point layout definition
@@ -27,47 +26,51 @@ pub struct PointLayout<'pv>(pub(crate) &'pv pdal_sys::layout::PointLayout);
 impl<'a> PointLayout<'a> {
     /// Get the size in bytes of a point in this layout.
     pub fn point_size(&self) -> usize {
-        self.0.pointSize()
+        self.0.point_size()
     }
 
-    // /// Returns the list of dimension types used by the layout.
-    // pub fn dimension_types(&self) -> Result<DimensionTypeList> {
-    //     todo!("dimension_types")
-    // }
-    //
-    // /// Lookup the dimension type by name.
-    // ///
-    // /// Returns Ok(DimensionType::invalid()) if a dimension with given name is not found.
-    // pub fn dimension(&self, name: &str) -> Result<DimensionType> {
-    //     todo!("dimension")
-    // }
+    /// Returns the sequence of dimension identifiers used by the layout.
+    pub fn dimensions(&self) -> impl Iterator<Item = DimTypeId> {
+        self.0.dim_ids()
+    }
+
+    /// Returns the sequence of dimension types used by the layout.
+    pub fn dimension_types(&self) -> impl Iterator<Item = &DimType> {
+        self.0.dim_types()
+    }
+
+    /// Lookup the dimension type by identifier.
+    ///
+    /// Returns `None` if identifier is not found.
+    pub fn dimension_type(&self, id: DimTypeId) -> Option<&DimType> {
+        self.dimension_types().find(|&dt| dt.id() == id)
+    }
 
     /// Get the size in bytes of the given dimension in this layout.
-    pub fn dimension_size(&self, name: &str) -> Result<usize> {
-        todo!("dimension_size")
+    pub fn dimension_size(&self, id: DimTypeId) -> Option<usize> {
+        self.0.dimSize(id).ok()
     }
 
     /// Returns the byte offset of a dimension type with the given name.
-    pub fn dimension_offset(&self, name: &str) -> Result<usize> {
-        todo!("dimension_offset")
+    pub fn dimension_offset(&self, id: DimTypeId) -> Option<usize> {
+        self.0.dimOffset(id).ok()
     }
 }
 
 impl Debug for PointLayout<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let dims = self.dimensions().collect::<Vec<_>>();
         f.debug_struct("PointLayout")
             .field("point_size", &self.point_size())
-            // .field(
-            //     "dimension_types",
-            //     &self.dimension_types().map_err(|_| std::fmt::Error)?,
-            // )
-            .finish()
+            .field("dimensions", &format_args!("{:?}", &dims))
+            .finish_non_exhaustive()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::testkit::{read_test_file, TestResult};
+    use crate::DimTypeId;
 
     #[test]
     fn test_layout() -> TestResult {
@@ -78,8 +81,13 @@ mod tests {
         let view = views.first().ok_or("no point view")?;
         let layout = view.layout()?;
 
+        dbg!(&layout);
+
         assert_eq!(layout.point_size(), 56);
-        //        assert_eq!(layout.dimension("X")?.interpretation()?, "double");
+        assert_eq!(layout.dimension_offset(DimTypeId::X).unwrap(), 0);
+        assert_eq!(layout.dimension_size(DimTypeId::X).unwrap(), 8);
+        assert_eq!(layout.dimension_offset(DimTypeId::Y).unwrap(), 1);
+
         Ok(())
     }
 }

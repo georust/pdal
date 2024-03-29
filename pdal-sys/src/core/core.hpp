@@ -22,7 +22,6 @@
 
 #include <iterator>
 #include "rust/cxx.h"
-//#include "pdal-sys/src/core/mod.rs.h"
 #include <pdal/pdal.hpp>
 
 namespace pdal_sys {
@@ -51,10 +50,15 @@ namespace pdal_sys {
         using DimType = pdal::DimType;
         typedef VecIterator<DimType> DimTypeIter;
         using DimTypeId = pdal::Dimension::Id;
+        typedef VecIterator<DimTypeId> DimIdIter;
+        
         DimTypeId id(const DimType &dt);
-        using DimTypeRepr = pdal::Dimension::Type;
-        DimTypeRepr representation(const DimType &dt);
         rust::String description(DimTypeId id);
         rust::String name(DimTypeId id);
+        
+        using DimTypeRepr = pdal::Dimension::Type;
+        std::unique_ptr<DimTypeRepr> repr(const DimType &dt);
+        rust::String name(const DimTypeRepr &repr);
+        std::size_t typeSizeBytes(const DimTypeRepr &repr);
     }
 }

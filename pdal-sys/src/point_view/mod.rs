@@ -46,9 +46,9 @@ mod ffi {
         fn wkt(pv: &PointView) -> Result<String>;
     }
 }
+pub use ffi::{PointView, PointViewSet, PointViewSetIter};
 
 use cxx::{SharedPtr, UniquePtr};
-pub use ffi::{PointView, PointViewSet, PointViewSetIter};
 use std::fmt::{Debug, Formatter};
 
 pub type PointViewPtr = SharedPtr<PointView>;

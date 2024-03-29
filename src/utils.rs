@@ -17,12 +17,8 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#![allow(unused)]
-use crate::error::Result;
-use std::ffi::{c_char, c_int, CString};
 use std::fmt::{Debug, Formatter};
 use std::ops::Deref;
-use std::path::PathBuf;
 
 /// Newtype for more generically converting between foreign types.
 ///
@@ -40,6 +36,7 @@ use std::path::PathBuf;
 /// ```
 pub(crate) struct Conv<T>(pub(crate) T);
 
+#[allow(dead_code)]
 impl<T> Conv<T> {
     pub fn inner(&self) -> &T {
         &self.0
@@ -53,22 +50,6 @@ impl<T> Deref for Conv<T> {
     type Target = T;
     fn deref(&self) -> &Self::Target {
         &self.inner()
-    }
-}
-
-impl TryFrom<Conv<CString>> for String {
-    type Error = crate::error::Error;
-
-    fn try_from(value: Conv<CString>) -> std::result::Result<Self, Self::Error> {
-        Ok(value.to_str()?.into())
-    }
-}
-
-impl TryFrom<Conv<CString>> for PathBuf {
-    type Error = crate::error::Error;
-
-    fn try_from(value: Conv<CString>) -> std::result::Result<Self, Self::Error> {
-        Ok(value.to_str()?.into())
     }
 }
 
