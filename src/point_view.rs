@@ -19,8 +19,12 @@
 
 use crate::error::Result;
 use crate::utils::Elided;
-use crate::PointLayout;
+use crate::{DimTypeId, PointLayout};
 use std::fmt::{Debug, Formatter};
+
+pub type PointId = pdal_sys::core::PointId;
+
+pub type PackedPoint = pdal_sys::core::PackedPoint;
 
 pub struct PointView(pub(crate) pdal_sys::point_view::PointViewPtr);
 
@@ -33,6 +37,11 @@ impl PointView {
     /// Number of points in the view.
     pub fn len(&self) -> usize {
         self.0.len() as usize
+    }
+
+    /// Iterator over the valid point IDs
+    pub fn point_ids(&self) -> impl Iterator<Item = PointId> {
+        (0..self.len()).map(|i| i as PointId)
     }
 
     /// Determine if the point view is empty
@@ -55,6 +64,11 @@ impl PointView {
         let pl = self.0.layout();
         Ok(PointLayout(pl))
     }
+
+    /// Construct a [`PackedPoint`] with data at index `id` and dimensions `dims`.
+    pub fn get_packed_point(&self, id: PointId, dims: &[DimTypeId]) -> Result<PackedPoint> {
+        Ok(self.0.get_packed_point(id, dims)?)
+    }
 }
 
 impl Debug for PointView {
@@ -70,7 +84,7 @@ impl Debug for PointView {
 #[cfg(test)]
 mod tests {
     use crate::testkit::{read_test_file, TestResult};
-    use crate::{error::Result, ExecutedPipeline, Pipeline};
+    use crate::{error::Result, DimTypeId, ExecutedPipeline, Pipeline};
 
     fn fixture() -> Result<ExecutedPipeline> {
         let json = read_test_file("copy.json");
@@ -97,11 +111,18 @@ mod tests {
         let views = result.point_views()?;
         let view = views.first().ok_or("no point view")?;
         let layout = view.layout()?;
-        dbg!(layout.dimensions().collect::<Vec<_>>());
+
+        let dims = [DimTypeId::X, DimTypeId::Y, DimTypeId::Z];
+
+        for pid in view.point_ids().take(5) {
+            let point = view.get_packed_point(pid, &dims)?;
+            dbg!(point);
+        }
 
         //        let dims = layout.dimension_types()?;
         //        let point = view.get_packed_point(&dims, 0)?;
         //        assert_eq!(point.0.len(), 56);
+        // TODO: Check values
         Ok(())
     }
 }

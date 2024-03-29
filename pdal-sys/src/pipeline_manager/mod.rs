@@ -22,10 +22,9 @@
 use cxx::UniquePtr;
 use std::fmt::Debug;
 
-#[cxx::bridge]
+#[cxx::bridge(namespace = "pdal_sys")]
 mod ffi {
-
-    #[namespace = "pdal_sys"]
+    
     unsafe extern "C++" {
         include!("pdal-sys/src/pipeline_manager/pipeline_manager.hpp");
         type PipelineManager;

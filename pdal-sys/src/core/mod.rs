@@ -20,26 +20,28 @@
 #![allow(dead_code)]
 
 mod enums;
-pub use enums::DimTypeId;
 
-#[cxx::bridge]
+pub use enums::*;
+use std::ffi::c_char;
+
+#[cxx::bridge(namespace = "pdal_sys")]
 mod ffi {
 
     #[namespace = "pdal_sys::core"]
     unsafe extern "C++" {
         include!("pdal-sys/src/core/core.hpp");
+        // TODO: See github.com/dtolnay/cxx/issues/1332
         type DimType;
-        type DimTypeId = super::DimTypeId;
-        type DimTypeRepr;
+        type DimTypeId = super::enums::DimTypeId;
         fn id(dt: &DimType) -> DimTypeId;
-        fn repr(dt: &DimType) -> UniquePtr<DimTypeRepr>;
-        #[cxx_name = "name"]
-        fn repr_name(r: &DimTypeRepr) -> String;
-        /// Type size.
-        fn typeSizeBytes(dt: &DimTypeRepr) -> usize;
+        type DimTypeEncoding = super::enums::DimTypeEncoding;
+        fn encoding(dt: &DimType) -> DimTypeEncoding;
+        fn interpretationName(enc: DimTypeEncoding) -> String;
+        fn encodingSizeBytes(enc: DimTypeEncoding) -> usize;
+        fn encodingOrdinal(enc: DimTypeEncoding) -> i32;
 
         #[cxx_name = "name"]
-        fn id_name(id: DimTypeId) -> String;
+        fn idName(id: DimTypeId) -> String;
         fn description(id: DimTypeId) -> String;
         type DimTypeIter<'a>;
         fn hasNext(self: &DimTypeIter) -> bool;
@@ -52,17 +54,38 @@ mod ffi {
         fn nextId(self: Pin<&mut DimIdIter>) -> Result<&DimTypeId>;
     }
 
+    // These trigger the generation of the C++ template backing this concrete type.
+    // See: https://cxx.rs/extern-c++.html#explicit-shim-trait-impls
     impl UniquePtr<DimTypeIter<'_>> {}
     impl UniquePtr<DimIdIter> {}
 }
 
 use cxx::UniquePtr;
-pub use ffi::{DimIdIter, DimType, DimTypeIter, DimTypeRepr};
-use std::fmt::{Debug, Formatter};
+pub use ffi::{DimIdIter, DimType, DimTypeEncoding, DimTypeIter};
+use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
 use std::mem;
 
-pub type DimTypeReprPtr = UniquePtr<DimTypeRepr>;
+pub type PointId = u64;
+
+#[derive(Clone)]
+pub struct PackedPoint {
+    data: Vec<c_char>,
+}
+
+impl PackedPoint {
+    pub(crate) fn new(buf: Vec<c_char>) -> PackedPoint {
+        PackedPoint { data: buf }
+    }
+}
+
+impl Debug for PackedPoint {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("PackedPoint")
+            .field("len", &self.data.len())
+            .finish_non_exhaustive()
+    }
+}
 
 impl DimType {
     #[inline]
@@ -70,8 +93,8 @@ impl DimType {
         ffi::id(self)
     }
     #[inline]
-    pub fn repr(&self) -> DimTypeReprPtr {
-        ffi::repr(self)
+    pub fn encoding(&self) -> DimTypeEncoding {
+        ffi::encoding(self)
     }
 }
 
@@ -79,7 +102,7 @@ impl Debug for DimType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("DimType")
             .field("id", &self.id())
-            .field("representation", &self.repr())
+            .field("encoding", &self.encoding())
             .finish_non_exhaustive()
     }
 }
@@ -87,7 +110,7 @@ impl Debug for DimType {
 impl DimTypeId {
     #[inline]
     pub fn name(&self) -> String {
-        ffi::id_name(*self)
+        ffi::idName(*self)
     }
     #[inline]
     pub fn description(&self) -> String {
@@ -95,21 +118,57 @@ impl DimTypeId {
     }
 }
 
-impl DimTypeRepr {
-    #[inline]
-    pub fn name(&self) -> String {
-        ffi::repr_name(self)
-    }
-    #[inline]
-    pub fn size_bytes(&self) -> usize {
-        ffi::typeSizeBytes(self)
+impl Debug for DimTypeId {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        if f.alternate() {
+            f.debug_struct("DimTypeId")
+                .field("name", &self.name())
+                .field("description", &self.description())
+                .finish()
+        } else {
+            f.write_str(&self.name())
+        }
     }
 }
 
-impl Debug for DimTypeRepr {
+impl Display for DimTypeId {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("DimTypeRepr")
+        write!(f, "{}", &self.name())
+    }
+}
+
+impl DimTypeEncoding {
+    #[inline]
+    pub fn name(&self) -> &'static str {
+        match *self {
+            DimTypeEncoding::None => "None",
+            DimTypeEncoding::Unsigned8 => "Unsigned8",
+            DimTypeEncoding::Signed8 => "Signed8",
+            DimTypeEncoding::Unsigned16 => "Unsigned16",
+            DimTypeEncoding::Signed16 => "Signed16",
+            DimTypeEncoding::Unsigned32 => "Unsigned32",
+            DimTypeEncoding::Signed32 => "Signed32",
+            DimTypeEncoding::Unsigned64 => "Unsigned64",
+            DimTypeEncoding::Signed64 => "Signed64",
+            DimTypeEncoding::Float => "Float",
+            DimTypeEncoding::Double => "Double",
+        }
+    }
+    #[inline]
+    pub fn interpretation(&self) -> String {
+        ffi::interpretationName(*self)
+    }
+    #[inline]
+    pub fn size_bytes(&self) -> usize {
+        ffi::encodingSizeBytes(*self)
+    }
+}
+
+impl Debug for DimTypeEncoding {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("DimTypeEncoding")
             .field("name", &self.name())
+            .field("interpretation", &self.interpretation())
             .field("size_bytes", &self.size_bytes())
             .finish()
     }

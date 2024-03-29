@@ -32,16 +32,20 @@ namespace pdal_sys {
             return rust::String { pdal::Dimension::name(id) };
         }
 
-        std::unique_ptr<DimTypeRepr> repr(const DimType& id) {
-            return std::make_unique<DimTypeRepr>(id.m_type);
+        DimTypeEncoding encoding(const DimType& id) {
+            return id.m_type;
         }
 
-        rust::String name(const DimTypeRepr &repr) {
-            return rust::String { pdal::Dimension::interpretationName(repr) };
+        rust::String interpretationName(DimTypeEncoding enc) {
+            return rust::String { pdal::Dimension::interpretationName(enc) };
         }
 
-        std::size_t typeSizeBytes(const DimTypeRepr &repr) {
-            return pdal::Dimension::size(repr);
+        std::size_t encodingSizeBytes(DimTypeEncoding enc) {
+            return pdal::Dimension::size(enc);
+        }
+
+        int encodingOrdinal(DimTypeEncoding enc) {
+            return (int) enc;
         }
     }
 }

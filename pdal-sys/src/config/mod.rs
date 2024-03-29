@@ -18,7 +18,7 @@
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #![allow(dead_code)]
-#[cxx::bridge]
+#[cxx::bridge(namespace = "pdal_sys")]
 mod ffi {
     #[namespace = "pdal::Config"]
     #[repr(u32)]

@@ -17,11 +17,12 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-// NB: this was hand copied. In the future we should use `bindgen` to ensure true compatibility
+// NB: this was hand copied. In the future we should use `bindgen` to ensure future compatibility
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
 #[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum DimTypeId {
+    #[default]
     Unknown,
     X,
     Y,
@@ -158,8 +159,27 @@ unsafe impl cxx::ExternType for DimTypeId {
     type Kind = cxx::kind::Trivial;
 }
 
-impl Default for DimTypeId {
-    fn default() -> Self {
-        Self::Unknown
-    }
+// NB: this was hand copied. Ordinals are from pdal::Dimension::Type, and are
+// compile-time computed.
+// In the future we should use `bindgen` to ensure stable compatibility
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
+#[repr(C)]
+pub enum DimTypeEncoding {
+    #[default]
+    None = 0,
+    Unsigned8 = 513,
+    Signed8 = 257,
+    Unsigned16 = 514,
+    Signed16 = 258,
+    Unsigned32 = 516,
+    Signed32 = 260,
+    Unsigned64 = 520,
+    Signed64 = 264,
+    Float = 1028,
+    Double = 1032,
+}
+
+unsafe impl cxx::ExternType for DimTypeEncoding {
+    type Id = cxx::type_id!("pdal_sys::core::DimTypeEncoding");
+    type Kind = cxx::kind::Trivial;
 }

@@ -19,7 +19,7 @@
 
 #![allow(dead_code)]
 
-#[cxx::bridge]
+#[cxx::bridge(namespace = "pdal_sys")]
 mod ffi {
     #[namespace = "pdal_sys::layout"]
     unsafe extern "C++" {
@@ -28,6 +28,7 @@ mod ffi {
         type PointLayout;
         #[cxx_name = "pointSize"]
         fn point_size(self: &PointLayout) -> usize;
+        fn dimensionCount(pl: &PointLayout) -> usize;
         #[namespace = "pdal_sys::core"]
         type DimType = crate::core::DimType;
         #[namespace = "pdal_sys::core"]
@@ -56,6 +57,7 @@ impl PointLayout {
         DimTypeIterator::new(ffi::dimTypes(self))
     }
 
+    #[inline]
     pub fn dim_ids(&self) -> DimIdIterator {
         DimIdIterator(ffi::dimIds(self))
     }
@@ -64,7 +66,7 @@ impl PointLayout {
 impl Debug for PointLayout {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("PointLayout")
-            .field("pointSize", &self.point_size())
+            .field("point_size", &self.point_size())
             .field("dimensions", &self.dim_types().collect::<Vec<_>>())
             .finish_non_exhaustive()
     }
@@ -91,7 +93,10 @@ mod tests {
         let layout = view.layout();
         assert_eq!(
             layout.point_size(),
-            layout.dim_types().map(|dt| dt.repr().size_bytes()).sum()
+            layout
+                .dim_types()
+                .map(|dt| dt.encoding().size_bytes())
+                .sum()
         );
     }
 }

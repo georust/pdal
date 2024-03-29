@@ -18,7 +18,7 @@
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 mod config;
-mod dimtype;
+mod dimension;
 mod error;
 mod json;
 mod layout;
@@ -29,7 +29,7 @@ mod testkit;
 pub(crate) mod utils;
 
 pub use config::*;
-pub use dimtype::*;
+pub use dimension::*;
 pub use json::PdalJson;
 pub use layout::*;
 pub use pipeline::*;

@@ -17,7 +17,7 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use crate::{DimType, DimTypeId};
+use crate::{DimTypeId, LayoutDimension};
 use std::fmt::Debug;
 
 /// Point layout definition
@@ -29,21 +29,25 @@ impl<'a> PointLayout<'a> {
         self.0.point_size()
     }
 
+    pub fn dimension_count(&self) -> usize {
+        self.0.dim_ids().count()
+    }
+
     /// Returns the sequence of dimension identifiers used by the layout.
-    pub fn dimensions(&self) -> impl Iterator<Item = DimTypeId> {
+    pub fn dimension_ids(&self) -> impl Iterator<Item = DimTypeId> {
         self.0.dim_ids()
     }
 
     /// Returns the sequence of dimension types used by the layout.
-    pub fn dimension_types(&self) -> impl Iterator<Item = &DimType> {
-        self.0.dim_types()
+    pub fn dimension_types(&self) -> impl Iterator<Item = LayoutDimension> {
+        self.0.dim_ids().map(|id| LayoutDimension(self, id))
     }
 
     /// Lookup the dimension type by identifier.
     ///
     /// Returns `None` if identifier is not found.
-    pub fn dimension_type(&self, id: DimTypeId) -> Option<&DimType> {
-        self.dimension_types().find(|&dt| dt.id() == id)
+    pub fn dimension_type(&self, id: DimTypeId) -> Option<LayoutDimension> {
+        self.dimension_types().find(|dt| dt.id() == id)
     }
 
     /// Get the size in bytes of the given dimension in this layout.
@@ -59,7 +63,7 @@ impl<'a> PointLayout<'a> {
 
 impl Debug for PointLayout<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let dims = self.dimensions().collect::<Vec<_>>();
+        let dims = self.dimension_ids().collect::<Vec<_>>();
         f.debug_struct("PointLayout")
             .field("point_size", &self.point_size())
             .field("dimensions", &format_args!("{:?}", &dims))
@@ -80,8 +84,6 @@ mod tests {
         let views = result.point_views()?;
         let view = views.first().ok_or("no point view")?;
         let layout = view.layout()?;
-
-        dbg!(&layout);
 
         assert_eq!(layout.point_size(), 56);
         assert_eq!(layout.dimension_offset(DimTypeId::X).unwrap(), 0);

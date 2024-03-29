@@ -19,8 +19,9 @@
 
 #![allow(dead_code)]
 
-#[cxx::bridge]
+#[cxx::bridge(namespace = "pdal_sys")]
 mod ffi {
+
     #[namespace = "pdal_sys::point_view_set"]
     unsafe extern "C++" {
         include!("pdal-sys/src/point_view/point_view.hpp");
@@ -44,13 +45,24 @@ mod ffi {
         fn layout(pv: &PointView) -> &PointLayout;
         fn proj4(pv: &PointView) -> Result<String>;
         fn wkt(pv: &PointView) -> Result<String>;
+        #[namespace = "pdal_sys::core"]
+        type DimTypeId = crate::core::DimTypeId;
+        fn getPackedPoint(
+            pv: &PointView,
+            id: u64, /*PointId*/
+            dims: &Vec<DimTypeId>,
+        ) -> Result<Vec<c_char>>;
     }
+
+    // This triggers the generation of the C++ template backing this concrete type.
+    // See: https://cxx.rs/extern-c++.html#explicit-shim-trait-impls
+    impl Vec<DimTypeId> {}
 }
 pub use ffi::{PointView, PointViewSet, PointViewSetIter};
 
+use crate::core::{DimTypeId, PackedPoint, PointId};
 use cxx::{SharedPtr, UniquePtr};
 use std::fmt::{Debug, Formatter};
-
 pub type PointViewPtr = SharedPtr<PointView>;
 
 impl PointView {
@@ -60,8 +72,17 @@ impl PointView {
     pub fn wkt(&self) -> Result<String, cxx::Exception> {
         ffi::wkt(self)
     }
-    pub fn layout(&self) -> &ffi::PointLayout {
+    pub fn layout(&self) -> &crate::layout::PointLayout {
         ffi::layout(self)
+    }
+
+    pub fn get_packed_point(
+        &self,
+        id: PointId,
+        dims: &[DimTypeId],
+    ) -> Result<PackedPoint, cxx::Exception> {
+        let buf = ffi::getPackedPoint(self, id, &dims.to_vec())?;
+        Ok(PackedPoint::new(buf))
     }
 }
 

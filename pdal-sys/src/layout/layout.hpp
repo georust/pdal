@@ -27,7 +27,9 @@ namespace pdal_sys {
         using PointLayout = pdal::PointLayout;
         std::unique_ptr<pdal_sys::core::DimTypeIter> dimTypes(const PointLayout &ps);
         std::unique_ptr<pdal_sys::core::DimIdIter> dimIds(const PointLayout &ps);
-        std::size_t dimOffset(const PointLayout &ps, pdal::Dimension::Id id);
-        std::size_t dimSize(const PointLayout &ps, pdal::Dimension::Id id);
+        std::size_t dimensionCount(const PointLayout &pl);
+
+        std::size_t dimOffset(const PointLayout &pl, pdal::Dimension::Id id);
+        std::size_t dimSize(const PointLayout &pl, pdal::Dimension::Id id);
     }
 }

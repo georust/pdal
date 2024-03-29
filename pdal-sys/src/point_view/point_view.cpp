@@ -20,6 +20,7 @@
 #include <memory>
 #include "pdal-sys/src/point_view/point_view.hpp"
 
+#define  let
 namespace pdal_sys {
     namespace point_view_set {
         std::unique_ptr<PointViewSetIter> iter(const PointViewSet &set) {
@@ -58,8 +59,35 @@ namespace pdal_sys {
         }
 
         const pdal::PointLayout& layout(const PointView& view) {
-            // TODO: is this legit?
+            // TODO: is this legit? Does it create a stable reference?
             return *view.layout();
+        }
+
+        size_t pointSizeForDims(const PointView& view, const rust::Vec<core::DimTypeId>& dims) {
+            size_t retval = 0;
+            for (auto dim : dims) {
+                retval += view.layout()->dimSize(dim);
+            }
+            return retval;
+        }
+
+        rust::Vec<char> getPackedPoint(const PointView &pv, pdal::PointId id, const rust::Vec<core::DimTypeId>& dims) {
+            size_t buf_size = pointSizeForDims(pv, dims);
+            rust::Vec<char> buf = rust::Vec<char>();
+            // Need to figure out a better way of initializing this buffer
+            buf.reserve(buf_size);
+            for (int i = 0; i < buf_size; i++) {
+                buf.emplace_back(0);
+            }
+            pdal::DimTypeList dt_list;
+
+            for (auto dim : dims) {
+                dt_list.emplace_back( dim, pv.layout()->dimType(dim) );
+            }
+
+            pv.getPackedPoint(dt_list, id, buf.data());
+
+            return buf;
         }
     }
 

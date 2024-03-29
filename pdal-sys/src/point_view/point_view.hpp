@@ -33,6 +33,7 @@ namespace pdal_sys {
         const pdal::PointLayout& layout(const PointView& view);
         rust::String proj4(const PointView& view);
         rust::String wkt(const PointView& view);
+        rust::Vec<char> getPackedPoint(const PointView &pv, pdal::PointId id, const rust::Vec<core::DimTypeId>& dims);
     }
 
     namespace point_view_set {
