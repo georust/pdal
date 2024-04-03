@@ -1,6 +1,7 @@
 [env]
 CARGO_TARGET_DIR = { value = "target", relative = true }
 TEST_DATA_DIR = { value = "tests/data", relative = true }
+PKG_DIR = { value = ".", relative = true }
 
 [alias]
 # Run clippy, raising warnings to errors

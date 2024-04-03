@@ -31,6 +31,8 @@ comments:
   - extensions:
       - rs
       - h
+      - hpp
+      - cpp
     columns: 100
     commenter:
       type: line

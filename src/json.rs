@@ -17,18 +17,20 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use std::ffi::{c_char, CString};
+use std::fmt::Display;
 
 #[derive(Debug, Clone)]
-pub struct PdalJson(CString);
+pub struct PdalJson(String);
 
 impl PdalJson {
     pub(crate) fn new(spec: &str) -> Self {
-        let cstr = CString::new(spec).unwrap_or_default();
-        Self(cstr)
+        Self(spec.to_owned())
     }
-    pub(crate) fn as_ptr(&self) -> *const c_char {
-        self.0.as_ptr()
+}
+
+impl Display for PdalJson {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 

@@ -1,4 +1,4 @@
-// MIT License
+     // MIT License
 //
 // Copyright (c) 2024 NUVIEW, Inc. <simeon.fitch@nuview.space>
 //
@@ -17,4 +17,29 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#include "pdal/pdalc.h"
+#pragma once
+#include "rust/cxx.h"
+#include <pdal/pdal.hpp>
+#include "pdal-sys/src/point_view/point_view.hpp"
+
+namespace pdal_sys {
+
+class PipelineManager {
+public:
+    PipelineManager();
+    void readPipeline(rust::Str json);
+    void readPipelineFromFile(rust::Str path);
+    bool pipelineStreamable() const;
+    std::size_t execute();
+    void executeStreamed();
+    const pdal_sys::point_view_set::PointViewSet& views() const;
+    rust::String metadata() const;
+    rust::String schema() const;
+    rust::String pipeline() const;
+
+private:
+    std::unique_ptr<pdal::PipelineManager> m_impl;
+};
+
+std::unique_ptr<PipelineManager> createPipelineManager();
+}

@@ -17,20 +17,16 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-pub mod config;
-pub mod core;
-pub mod layout;
-pub mod pipeline_manager;
-pub mod point_view;
+#pragma once
+#include "rust/cxx.h"
+#include <pdal/pdal_config.hpp>
 
-#[cfg(test)]
-pub(crate) mod testkit {
-    use once_cell::sync::Lazy;
-    use std::path::Path;
-    pub static DATA_DIR: Lazy<&Path> = Lazy::new(|| Path::new(env!("TEST_DATA_DIR")));
-    pub static TEST_WD: Lazy<&Path> = Lazy::new(|| Path::new(env!("PKG_DIR")));
-
-    pub fn data_file_path(name: &str) -> String {
-        DATA_DIR.join(name).to_string_lossy().to_string()
+namespace pdal_sys {
+    namespace Config {
+        rust::String versionString();
+        rust::String fullVersionString();
+        rust::String sha1();
+        rust::String debugInformation();
+        rust::String pluginInstallPath();
     }
 }

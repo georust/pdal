@@ -17,20 +17,40 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-pub mod config;
-pub mod core;
-pub mod layout;
-pub mod pipeline_manager;
-pub mod point_view;
+#pragma once
 
-#[cfg(test)]
-pub(crate) mod testkit {
-    use once_cell::sync::Lazy;
-    use std::path::Path;
-    pub static DATA_DIR: Lazy<&Path> = Lazy::new(|| Path::new(env!("TEST_DATA_DIR")));
-    pub static TEST_WD: Lazy<&Path> = Lazy::new(|| Path::new(env!("PKG_DIR")));
+#include "rust/cxx.h"
+#include <pdal/pdal.hpp>
+#include <utility>
+#include "pdal-sys/src/layout/layout.hpp"
+#include "pdal-sys/src/core/core.hpp"
 
-    pub fn data_file_path(name: &str) -> String {
-        DATA_DIR.join(name).to_string_lossy().to_string()
+namespace pdal_sys {
+
+    namespace point_view {
+        using PointView = pdal::PointView;
+        int id(const PointView &view);
+        const pdal::PointLayout& layout(const PointView& view);
+        rust::String proj4(const PointView& view);
+        rust::String wkt(const PointView& view);
+        rust::Vec<char> getPackedPoint(const PointView &pv, pdal::PointId id, const rust::Vec<core::DimTypeId>& dims);
+    }
+
+    namespace point_view_set {
+        using PointViewSet = pdal::PointViewSet;
+        class PointViewSetIter {
+        public:
+            explicit PointViewSetIter(const pdal::PointViewSet &views);
+
+            bool hasNext() const;
+
+            pdal::PointViewPtr next();
+
+        private:
+            const pdal::PointViewSet &m_views;
+            pdal::PointViewSet::const_iterator m_impl;
+        };
+
+        std::unique_ptr<PointViewSetIter> iter(const PointViewSet &set);
     }
 }

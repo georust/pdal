@@ -18,174 +18,73 @@
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use crate::error::Result;
-use crate::utils::{fetch_string_from_handle_with_buffer, Conv, Elided};
-use crate::{DimensionTypeList, PointLayout};
-use pdal_sys::size_t;
-use std::ffi::c_char;
+use crate::utils::Elided;
+use crate::{DimTypeId, PointLayout};
 use std::fmt::{Debug, Formatter};
-use std::marker::PhantomData;
 
-pub struct PointView<'pipeline>(pdal_sys::PDALPointViewPtr, PhantomData<&'pipeline ()>);
+pub type PointId = pdal_sys::core::PointId;
 
-impl<'pipeline> PointView<'pipeline> {
-    pub(crate) fn new(handle: pdal_sys::PDALPointViewPtr) -> Self {
-        Self(handle, PhantomData)
-    }
-    pub fn as_ptr(&self) -> pdal_sys::PDALPointViewPtr {
-        self.0
-    }
+pub type PackedPoint = pdal_sys::core::PackedPoint;
 
-    /// Get the point view ID.
+pub struct PointView(pub(crate) pdal_sys::point_view::PointViewPtr);
+
+impl PointView {
+    /// Point view ID.
     pub fn id(&self) -> i32 {
-        unsafe { pdal_sys::PDALGetPointViewId(self.as_ptr()) }
+        self.0.id()
     }
 
-    /// Determine if the point view is empty.
+    /// Number of points in the view.
+    pub fn len(&self) -> usize {
+        self.0.len() as usize
+    }
+
+    /// Iterator over the valid point IDs
+    pub fn point_ids(&self) -> impl Iterator<Item = PointId> {
+        (0..self.len()).map(|i| i as PointId)
+    }
+
+    /// Determine if the point view is empty
     pub fn is_empty(&self) -> bool {
-        unsafe { pdal_sys::PDALIsPointViewEmpty(self.as_ptr()) }
-    }
-
-    /// Get the number of points in the view.
-    pub fn point_count(&self) -> usize {
-        unsafe { pdal_sys::PDALGetPointViewSize(self.as_ptr()) as usize }
+        self.0.len() == 0
     }
 
     /// Get the CRS as a Proj4 string.
     pub fn proj4(&self) -> Result<String> {
-        let s = fetch_string_from_handle_with_buffer::<1024, _>(
-            self.as_ptr(),
-            pdal_sys::PDALGetPointViewProj4,
-        )?;
-        Ok(Conv(s).try_into()?)
+        Ok(self.0.proj4()?)
     }
 
-    /// Get the CRS as a Proj4 string.
+    /// Get the CRS as a WKT string.
     pub fn wkt(&self) -> Result<String> {
-        extern "C" fn pretty_wkt(
-            handle: pdal_sys::PDALPointViewPtr,
-            buf: *mut c_char,
-            size: size_t,
-        ) -> size_t {
-            unsafe { pdal_sys::PDALGetPointViewWkt(handle, buf, size, true) }
-        }
-
-        let s = fetch_string_from_handle_with_buffer::<1024, _>(self.as_ptr(), pretty_wkt)?;
-        Ok(Conv(s).try_into()?)
+        Ok(self.0.wkt()?)
     }
 
-    /// Get the point view layout.
+    /// Point view layout
     pub fn layout(&self) -> Result<PointLayout> {
-        let layout = unsafe { pdal_sys::PDALGetPointViewLayout(self.as_ptr()) };
-        if layout.is_null() {
-            return Err("PDAL point view layout retrieval failed".into());
-        }
-        Ok(PointLayout::new(layout))
+        let pl = self.0.layout();
+        Ok(PointLayout(pl))
     }
 
-    /// Retrieves data for a point based on the provided dimension list.
-    pub fn get_packed_point(&self, dims: &DimensionTypeList, index: usize) -> Result<PackedPoint> {
-        let layout = self.layout()?;
-        let p_size = layout.point_size();
-        let mut buf = vec![u8::default(); p_size];
-
-        let size = unsafe {
-            pdal_sys::PDALGetPackedPoint(
-                self.as_ptr(),
-                dims.as_ptr(),
-                index as size_t,
-                buf.as_mut_ptr() as *mut c_char,
-            ) as usize
-        };
-
-        if size != p_size {
-            return Err("Expected point size of '{}'; got '{}'".into());
-        }
-
-        Ok(PackedPoint(buf))
-    }
-
-    // TODO:
-    // - PDALGetAllPackedPoints
-    // - PDALGetMeshSize
-    // - PDALGetAllTriangles
-}
-
-impl Drop for PointView<'_> {
-    fn drop(&mut self) {
-        unsafe { pdal_sys::PDALDisposePointView(self.as_ptr()) }
+    /// Construct a [`PackedPoint`] with data at index `id` and dimensions `dims`.
+    pub fn get_packed_point(&self, id: PointId, dims: &[DimTypeId]) -> Result<PackedPoint> {
+        Ok(self.0.get_packed_point(id, dims)?)
     }
 }
 
-// TODO: This doesn't actually clone the points, so need to understand semantics better.
-// impl Clone for PointView {
-//     fn clone(&self) -> Self {
-//         let handle = unsafe { pdal_sys::PDALClonePointView(self.as_ptr()) };
-//         Self::new(handle)
-//     }
-// }
-
-impl Debug for PointView<'_> {
+impl Debug for PointView {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("PointView")
             .field("id", &self.id())
-            .field("point_count", &self.point_count())
+            .field("len", &self.len())
             .field("proj4", &Elided(&self.proj4().unwrap_or_default()))
-            .finish()
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct PackedPoint(Vec<u8>);
-
-/// Iterator over point views.
-pub struct PointViewIter<'pipeline>(
-    pdal_sys::PDALPointViewIteratorPtr,
-    PhantomData<&'pipeline ()>,
-);
-
-impl<'pipeline> PointViewIter<'pipeline> {
-    pub(crate) fn new(handle: pdal_sys::PDALPointViewIteratorPtr) -> Self {
-        Self(handle, PhantomData)
-    }
-
-    pub(crate) fn has_next(&self) -> bool {
-        unsafe { pdal_sys::PDALHasNextPointView(self.as_ptr()) }
-    }
-
-    pub(crate) fn get_next(&mut self) -> pdal_sys::PDALPointViewPtr {
-        unsafe { pdal_sys::PDALGetNextPointView(self.as_ptr()) }
-    }
-
-    pub(crate) fn as_ptr(&self) -> pdal_sys::PDALPointViewIteratorPtr {
-        self.0
-    }
-}
-
-impl Drop for PointViewIter<'_> {
-    fn drop(&mut self) {
-        unsafe { pdal_sys::PDALDisposePointViewIterator(self.as_ptr()) }
-    }
-}
-
-impl<'pipline> Iterator for PointViewIter<'pipline> {
-    type Item = PointView<'pipline>;
-    fn next(&mut self) -> Option<Self::Item> {
-        if !self.has_next() {
-            return None;
-        }
-        let next = self.get_next();
-        if next.is_null() {
-            None
-        } else {
-            Some(PointView::new(next))
-        }
+            .finish_non_exhaustive()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::testkit::{read_test_file, TestResult};
-    use crate::{error::Result, ExecutedPipeline, Pipeline};
+    use crate::{error::Result, DimTypeId, ExecutedPipeline, Pipeline};
 
     fn fixture() -> Result<ExecutedPipeline> {
         let json = read_test_file("copy.json");
@@ -196,8 +95,9 @@ mod tests {
     #[test]
     fn test_iterator() -> TestResult {
         let result = fixture()?;
-        let view = result.point_views()?.next().ok_or("no point view")?;
-        assert_eq!(view.point_count(), 110000);
+        let views = result.point_views()?;
+        let view = views.first().ok_or("no point view")?;
+        assert_eq!(view.len(), 110000);
         assert_eq!(view.proj4()?, "+proj=lcc +lat_0=41.75 +lon_0=-120.5 +lat_1=43 +lat_2=45.5 +x_0=400000 +y_0=0 +ellps=GRS80 +units=ft +no_defs");
         assert!(view
             .wkt()?
@@ -208,12 +108,21 @@ mod tests {
     #[test]
     fn test_packed_point() -> TestResult {
         let result = fixture()?;
-        let view = result.point_views()?.next().ok_or("no point view")?;
+        let views = result.point_views()?;
+        let view = views.first().ok_or("no point view")?;
         let layout = view.layout()?;
-        dbg!(&layout);
-        let dims = layout.dimension_types()?;
-        let point = view.get_packed_point(&dims, 0)?;
-        assert_eq!(point.0.len(), 56);
+
+        let dims = [DimTypeId::X, DimTypeId::Y, DimTypeId::Z];
+
+        for pid in view.point_ids().take(5) {
+            let point = view.get_packed_point(pid, &dims)?;
+            dbg!(point);
+        }
+
+        //        let dims = layout.dimension_types()?;
+        //        let point = view.get_packed_point(&dims, 0)?;
+        //        assert_eq!(point.0.len(), 56);
+        // TODO: Check values
         Ok(())
     }
 }

@@ -18,11 +18,6 @@
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use crate::error::Result;
-use crate::utils::{fetch_int, fetch_string_with_buffer, Conv};
-use pdal_sys::{
-    PDALPluginInstallPath, PDALSha1, PDALVersionMajor, PDALVersionMinor, PDALVersionPatch,
-    PDALVersionString,
-};
 use std::path::PathBuf;
 
 #[derive(Clone, Debug)]
@@ -38,13 +33,12 @@ pub struct Config {
 impl Config {
     pub fn new() -> Result<Self> {
         Ok(Self {
-            version: Conv(fetch_string_with_buffer::<256>(PDALVersionString)?).try_into()?,
-            major: fetch_int(PDALVersionMajor)?,
-            minor: fetch_int(PDALVersionMinor)?,
-            patch: fetch_int(PDALVersionPatch)?,
-            sha: Conv(fetch_string_with_buffer::<256>(PDALSha1)?).try_into()?,
-            plugin_path: Conv(fetch_string_with_buffer::<1024>(PDALPluginInstallPath)?)
-                .try_into()?,
+            version: pdal_sys::config::version_string(),
+            major: pdal_sys::config::version_major(),
+            minor: pdal_sys::config::version_minor(),
+            patch: pdal_sys::config::version_patch(),
+            sha: pdal_sys::config::sha1(),
+            plugin_path: pdal_sys::config::plugin_install_path().into(),
         })
     }
 }

@@ -18,21 +18,21 @@
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 mod config;
-mod dimtype;
+mod dimension;
 mod error;
 mod json;
+mod layout;
 mod pipeline;
-mod point_layout;
 mod point_view;
 #[cfg(test)]
 mod testkit;
 pub(crate) mod utils;
 
 pub use config::*;
-pub use dimtype::*;
+pub use dimension::*;
 pub use json::PdalJson;
+pub use layout::*;
 pub use pipeline::*;
-pub use point_layout::*;
 pub use point_view::*;
 
 // TODO: Log levels

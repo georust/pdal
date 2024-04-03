@@ -17,20 +17,35 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-pub mod config;
-pub mod core;
-pub mod layout;
-pub mod pipeline_manager;
-pub mod point_view;
 
-#[cfg(test)]
-pub(crate) mod testkit {
-    use once_cell::sync::Lazy;
-    use std::path::Path;
-    pub static DATA_DIR: Lazy<&Path> = Lazy::new(|| Path::new(env!("TEST_DATA_DIR")));
-    pub static TEST_WD: Lazy<&Path> = Lazy::new(|| Path::new(env!("PKG_DIR")));
+#include "pdal-sys/src/core/core.hpp"
 
-    pub fn data_file_path(name: &str) -> String {
-        DATA_DIR.join(name).to_string_lossy().to_string()
+namespace pdal_sys {
+    namespace core {
+        DimTypeId id(const DimType &dt) {
+            return dt.m_id;
+        }
+        rust::String description(DimTypeId id) {
+            return rust::String { pdal::Dimension::description(id) };
+        }
+        rust::String name(DimTypeId id) {
+            return rust::String { pdal::Dimension::name(id) };
+        }
+
+        DimTypeEncoding encoding(const DimType& id) {
+            return id.m_type;
+        }
+
+        rust::String interpretationName(DimTypeEncoding enc) {
+            return rust::String { pdal::Dimension::interpretationName(enc) };
+        }
+
+        std::size_t encodingSizeBytes(DimTypeEncoding enc) {
+            return pdal::Dimension::size(enc);
+        }
+
+        int encodingOrdinal(DimTypeEncoding enc) {
+            return (int) enc;
+        }
     }
 }
