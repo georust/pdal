@@ -18,7 +18,7 @@
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 // NB: this was hand copied. In the future we should use `bindgen` to ensure future compatibility
-#[derive(Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Clone, Copy, PartialEq, Eq, Default, Hash)]
 #[repr(C)]
 #[non_exhaustive]
 pub enum DimTypeId {
@@ -185,8 +185,29 @@ unsafe impl cxx::ExternType for DimTypeEncoding {
     type Kind = cxx::kind::Trivial;
 }
 
+/// Discriminated union of instances of PDAL primitive types.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum PdalValue {
+    None,
+    Unsigned8(u8),
+    Signed8(i8),
+    Unsigned16(u16),
+    Signed16(i16),
+    Unsigned32(u32),
+    Signed32(i32),
+    Unsigned64(u64),
+    Signed64(i64),
+    Float(f32),
+    Double(f64),
+}
+
 pub trait PdalType: Sized {
+    /// Get the corresponding PDAL datatype encoding to this type.
     fn encoding() -> DimTypeEncoding;
+
+    /// Convert into a wrapped PdalValue
+    fn into_pdal_value(self) -> PdalValue;
+
     /// Convert dynamic type to static type when logically known.
     /// Returns `None` if given value isn't actually the <u>exact</u> same
     /// type as encoding.
@@ -199,11 +220,24 @@ pub trait PdalType: Sized {
     }
 }
 
+impl PdalType for PdalValue {
+    fn encoding() -> DimTypeEncoding {
+        DimTypeEncoding::None
+    }
+
+    fn into_pdal_value(self) -> PdalValue {
+        self
+    }
+}
+
 macro_rules! impl_pdal_type {
     ($t:ty, $enc:ident) => {
         impl PdalType for $t {
             fn encoding() -> DimTypeEncoding {
                 DimTypeEncoding::$enc
+            }
+            fn into_pdal_value(self) -> PdalValue {
+                PdalValue::$enc(self)
             }
         }
     };

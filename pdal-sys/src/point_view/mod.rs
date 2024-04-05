@@ -65,7 +65,7 @@ mod ffi {
 }
 pub use ffi::{PointView, PointViewSet, PointViewSetIter};
 
-use crate::core::{pdal_sys_throw, DimTypeEncoding, DimTypeId, PdalType, PointId};
+use crate::core::{pdal_sys_throw, DimTypeEncoding, DimTypeId, PdalType, PdalValue, PointId};
 use cxx::{SharedPtr, UniquePtr};
 use std::fmt::{Debug, Formatter};
 
@@ -100,7 +100,8 @@ impl PointView {
             DimTypeEncoding::Signed64 => T::static_cast(ffi::pointField_i64(self, dim, idx)?),
             DimTypeEncoding::Float => T::static_cast(ffi::pointField_f32(self, dim, idx)?),
             DimTypeEncoding::Double => T::static_cast(ffi::pointField_f64(self, dim, idx)?),
-            _ => None,
+            // Normally we'd expect caller to use `point_value` for this case, but this rids us of an edge case.
+            DimTypeEncoding::None => T::static_cast(self.point_value(dim, idx)?),
         };
 
         match r {
@@ -108,6 +109,41 @@ impl PointView {
             None => Err(pdal_sys_throw(&format!(
                 "Failed to convert value to type {:?}",
                 T::encoding()
+            ))
+            .unwrap_err()),
+        }
+    }
+
+    /// Get point dimension value as a discriminated union.
+    pub fn point_value(&self, dim: DimTypeId, idx: PointId) -> Result<PdalValue, cxx::Exception> {
+        match self.layout().dimEncoding(dim) {
+            DimTypeEncoding::Unsigned8 => {
+                Ok(PdalValue::Unsigned8(ffi::pointField_u8(self, dim, idx)?))
+            }
+            DimTypeEncoding::Signed8 => Ok(PdalValue::Signed8(ffi::pointField_i8(self, dim, idx)?)),
+            DimTypeEncoding::Unsigned16 => {
+                Ok(PdalValue::Unsigned16(ffi::pointField_u16(self, dim, idx)?))
+            }
+            DimTypeEncoding::Signed16 => {
+                Ok(PdalValue::Signed16(ffi::pointField_i16(self, dim, idx)?))
+            }
+            DimTypeEncoding::Unsigned32 => {
+                Ok(PdalValue::Unsigned32(ffi::pointField_u32(self, dim, idx)?))
+            }
+            DimTypeEncoding::Signed32 => {
+                Ok(PdalValue::Signed32(ffi::pointField_i32(self, dim, idx)?))
+            }
+            DimTypeEncoding::Unsigned64 => {
+                Ok(PdalValue::Unsigned64(ffi::pointField_u64(self, dim, idx)?))
+            }
+            DimTypeEncoding::Signed64 => {
+                Ok(PdalValue::Signed64(ffi::pointField_i64(self, dim, idx)?))
+            }
+            DimTypeEncoding::Float => Ok(PdalValue::Float(ffi::pointField_f32(self, dim, idx)?)),
+            DimTypeEncoding::Double => Ok(PdalValue::Double(ffi::pointField_f64(self, dim, idx)?)),
+            _ => Err(pdal_sys_throw(&format!(
+                "Failed to convert value to type {:?}",
+                self.layout().dimEncoding(dim)
             ))
             .unwrap_err()),
         }
@@ -145,9 +181,10 @@ impl Iterator for PointViewSetIterator<'_> {
 
 #[cfg(test)]
 mod tests {
-    use crate::core::{DimTypeId, PointId};
+    use crate::core::{DimTypeId, PdalValue, PointId};
     use crate::pipeline_manager::createPipelineManager;
     use crate::testkit::*;
+    use std::collections::HashMap;
 
     #[test]
     fn test_get_views() {
@@ -184,38 +221,42 @@ mod tests {
         let next = iter.next();
         let view = next.unwrap();
 
-        let dims = [
-            DimTypeId::X,
-            DimTypeId::Y,
-            DimTypeId::Z,
-            DimTypeId::Intensity,
-            DimTypeId::ReturnNumber,
-            DimTypeId::NumberOfReturns,
-            DimTypeId::ScanDirectionFlag,
-            DimTypeId::EdgeOfFlightLine,
-            DimTypeId::Classification,
-            DimTypeId::Synthetic,
-            DimTypeId::KeyPoint,
-            DimTypeId::Withheld,
-            DimTypeId::Overlap,
-            DimTypeId::ScanAngleRank,
-            DimTypeId::UserData,
-            DimTypeId::PointSourceId,
-            DimTypeId::GpsTime,
-            DimTypeId::Red,
-            DimTypeId::Green,
-            DimTypeId::Blue,
-        ];
-
+        /// Manually extracted point values.
         let example: PointId = 4;
+        let expected = HashMap::from([
+            (DimTypeId::X, PdalValue::Double(637174.33)),
+            (DimTypeId::Y, PdalValue::Double(849407.37)),
+            (DimTypeId::Z, PdalValue::Double(411.38)),
+            (DimTypeId::Intensity, PdalValue::Unsigned16(15)),
+            (DimTypeId::ReturnNumber, PdalValue::Unsigned8(1)),
+            (DimTypeId::NumberOfReturns, PdalValue::Unsigned8(1)),
+            (DimTypeId::ScanDirectionFlag, PdalValue::Unsigned8(1)),
+            (DimTypeId::EdgeOfFlightLine, PdalValue::Unsigned8(0)),
+            (DimTypeId::Classification, PdalValue::Unsigned8(1)),
+            (DimTypeId::Synthetic, PdalValue::Unsigned8(0)),
+            (DimTypeId::KeyPoint, PdalValue::Unsigned8(0)),
+            (DimTypeId::Withheld, PdalValue::Unsigned8(0)),
+            (DimTypeId::Overlap, PdalValue::Unsigned8(0)),
+            (DimTypeId::ScanAngleRank, PdalValue::Float(-18.0)),
+            (DimTypeId::UserData, PdalValue::Unsigned8(130)),
+            (DimTypeId::PointSourceId, PdalValue::Unsigned16(7326)),
+            (DimTypeId::GpsTime, PdalValue::Double(245379.4008614817)),
+            (DimTypeId::Red, PdalValue::Unsigned16(78)),
+            (DimTypeId::Green, PdalValue::Unsigned16(94)),
+            (DimTypeId::Blue, PdalValue::Unsigned16(89)),
+        ]);
 
-        for d in dims {
-            let dim_val = view.point_value_as::<f64>(d, example);
-            assert!(dim_val.is_ok());
-            let dim_val = dim_val.unwrap();
-            let typ = view.layout().dimEncoding(d);
-            println!("Dim: {:?}, Value: {:?}, Type: {:?}", d, dim_val, typ);
+        for (dim, expected_value) in expected {
+            let dim_val = view.point_value_as::<PdalValue>(dim, example);
+            assert!(
+                dim_val.is_ok(),
+                "Failed to read dimension {dim:?} as PdalValue",
+            );
+            let pt_value = dim_val.unwrap();
+            assert_eq!(
+                pt_value, expected_value,
+                "Unexpected value for dimension {dim:?}"
+            );
         }
-        // 637174.330,849407.370,411.380,15.000,1.000,1.000,1.000,0.000,1.000,0.000,0.000,0.000,0.000,-18.000,130.000,7326.000,245379.401,78.000,94.000,89.000
     }
 }

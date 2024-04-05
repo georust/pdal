@@ -25,6 +25,7 @@ use std::fmt::{Debug, Formatter};
 pub type PointId = pdal_sys::core::PointId;
 
 pub use pdal_sys::core::PdalType;
+pub use pdal_sys::core::PdalValue;
 
 /// A point view is a collection of points with a common layout.
 pub struct PointView(pub(crate) pdal_sys::point_view::PointViewPtr);
@@ -66,9 +67,14 @@ impl PointView {
         Ok(PointLayout(pl))
     }
 
-    /// The the dimension value of the point at the given index.
+    /// Fetch the the dimension value of the point at the given index as the specified primitive type.
     pub fn point_value_as<T: PdalType>(&self, dim: DimTypeId, idx: PointId) -> Result<T> {
         Ok(self.0.point_value_as(dim, idx)?)
+    }
+
+    /// Fetch The the dimension value of the point at the given index as a wrapped [`PdalValue`].
+    pub fn point_value(&self, dim: DimTypeId, idx: PointId) -> Result<PdalValue> {
+        Ok(self.0.point_value(dim, idx)?)
     }
 }
 
