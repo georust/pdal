@@ -24,8 +24,9 @@ use std::fmt::{Debug, Formatter};
 
 pub type PointId = pdal_sys::core::PointId;
 
-pub type PackedPoint = pdal_sys::core::PackedPoint;
+pub use pdal_sys::core::PdalType;
 
+/// A point view is a collection of points with a common layout.
 pub struct PointView(pub(crate) pdal_sys::point_view::PointViewPtr);
 
 impl PointView {
@@ -65,9 +66,9 @@ impl PointView {
         Ok(PointLayout(pl))
     }
 
-    /// Construct a [`PackedPoint`] with data at index `id` and dimensions `dims`.
-    pub fn get_packed_point(&self, id: PointId, dims: &[DimTypeId]) -> Result<PackedPoint> {
-        Ok(self.0.get_packed_point(id, dims)?)
+    /// The the dimension value of the point at the given index.
+    pub fn get_point_value<T: PdalType>(&self, dim: DimTypeId, idx: PointId) -> Result<T> {
+        Ok(self.0.get_point_value(dim, idx)?)
     }
 }
 
@@ -110,13 +111,11 @@ mod tests {
         let result = fixture()?;
         let views = result.point_views()?;
         let view = views.first().ok_or("no point view")?;
-        let layout = view.layout()?;
 
         let dims = [DimTypeId::X, DimTypeId::Y, DimTypeId::Z];
 
         for pid in view.point_ids().take(5) {
-            let point = view.get_packed_point(pid, &dims)?;
-            dbg!(point);
+            dbg!(pid);
         }
 
         //        let dims = layout.dimension_types()?;

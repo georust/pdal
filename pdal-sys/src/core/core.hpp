@@ -47,6 +47,8 @@ namespace pdal_sys {
     };
 
     namespace core {
+        void pdal_sys_throw(rust::Str);
+
         using DimTypeEncoding = pdal::Dimension::Type;
         using DimType = pdal::DimType;
         using DimTypeId = pdal::Dimension::Id;
@@ -62,5 +64,6 @@ namespace pdal_sys {
         rust::String interpretationName(DimTypeEncoding enc);
         std::size_t encodingSizeBytes(DimTypeEncoding enc);
         int encodingOrdinal(DimTypeEncoding enc);
+
     }
 }

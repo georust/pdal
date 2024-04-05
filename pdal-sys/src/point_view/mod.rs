@@ -47,11 +47,16 @@ mod ffi {
         fn wkt(pv: &PointView) -> Result<String>;
         #[namespace = "pdal_sys::core"]
         type DimTypeId = crate::core::DimTypeId;
-        fn getPackedPoint(
-            pv: &PointView,
-            id: u64, /*PointId*/
-            dims: &Vec<DimTypeId>,
-        ) -> Result<Vec<c_char>>;
+        fn getPointValue_i8(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<i8>;
+        fn getPointValue_u8(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<u8>;
+        fn getPointValue_i16(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<i16>;
+        fn getPointValue_u16(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<u16>;
+        fn getPointValue_i32(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<i32>;
+        fn getPointValue_u32(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<u32>;
+        fn getPointValue_i64(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<i64>;
+        fn getPointValue_u64(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<u64>;
+        fn getPointValue_f32(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<f32>;
+        fn getPointValue_f64(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<f64>;
     }
 
     // This triggers the generation of the C++ template backing this concrete type.
@@ -60,29 +65,52 @@ mod ffi {
 }
 pub use ffi::{PointView, PointViewSet, PointViewSetIter};
 
-use crate::core::{DimTypeId, PackedPoint, PointId};
+use crate::core::{pdal_sys_throw, DimTypeEncoding, DimTypeId, PdalType, PointId};
 use cxx::{SharedPtr, UniquePtr};
 use std::fmt::{Debug, Formatter};
+
 pub type PointViewPtr = SharedPtr<PointView>;
 
 impl PointView {
+    #[inline]
     pub fn proj4(&self) -> Result<String, cxx::Exception> {
         ffi::proj4(self)
     }
+    #[inline]
     pub fn wkt(&self) -> Result<String, cxx::Exception> {
         ffi::wkt(self)
     }
+    #[inline]
     pub fn layout(&self) -> &crate::layout::PointLayout {
         ffi::layout(self)
     }
-
-    pub fn get_packed_point(
+    pub fn get_point_value<T: PdalType>(
         &self,
-        id: PointId,
-        dims: &[DimTypeId],
-    ) -> Result<PackedPoint, cxx::Exception> {
-        let buf = ffi::getPackedPoint(self, id, &dims.to_vec())?;
-        Ok(PackedPoint::new(buf))
+        dim: DimTypeId,
+        idx: PointId,
+    ) -> Result<T, cxx::Exception> {
+        let r = match T::encoding() {
+            DimTypeEncoding::Unsigned8 => T::static_cast(ffi::getPointValue_u8(self, dim, idx)?),
+            DimTypeEncoding::Signed8 => T::static_cast(ffi::getPointValue_i8(self, dim, idx)?),
+            DimTypeEncoding::Unsigned16 => T::static_cast(ffi::getPointValue_u16(self, dim, idx)?),
+            DimTypeEncoding::Signed16 => T::static_cast(ffi::getPointValue_i16(self, dim, idx)?),
+            DimTypeEncoding::Unsigned32 => T::static_cast(ffi::getPointValue_u32(self, dim, idx)?),
+            DimTypeEncoding::Signed32 => T::static_cast(ffi::getPointValue_i32(self, dim, idx)?),
+            DimTypeEncoding::Unsigned64 => T::static_cast(ffi::getPointValue_u64(self, dim, idx)?),
+            DimTypeEncoding::Signed64 => T::static_cast(ffi::getPointValue_i64(self, dim, idx)?),
+            DimTypeEncoding::Float => T::static_cast(ffi::getPointValue_f32(self, dim, idx)?),
+            DimTypeEncoding::Double => T::static_cast(ffi::getPointValue_f64(self, dim, idx)?),
+            _ => None,
+        };
+
+        match r {
+            Some(v) => Ok(v),
+            None => Err(pdal_sys_throw(&format!(
+                "Failed to convert value to type {:?}",
+                T::encoding()
+            ))
+            .unwrap_err()),
+        }
     }
 }
 
@@ -117,6 +145,7 @@ impl Iterator for PointViewSetIterator<'_> {
 
 #[cfg(test)]
 mod tests {
+    use crate::core::{DimTypeId, PointId};
     use crate::pipeline_manager::createPipelineManager;
     use crate::testkit::*;
 
@@ -139,7 +168,54 @@ mod tests {
 
         let view = next.unwrap();
         assert_eq!(view.len(), 110000);
+    }
 
-        //assert_eq!(super::ffi::layout(&view).pointSize(), 56);
+    #[test]
+    fn test_read_point() {
+        std::env::set_current_dir(TEST_WD.to_path_buf()).unwrap();
+        let mut mgr = createPipelineManager();
+        mgr.pin_mut()
+            .readPipelineFromFile(&data_file_path("info.json"))
+            .unwrap();
+        let _ = mgr.pin_mut().execute().unwrap();
+        let r = mgr.views();
+        let vs = r.unwrap();
+        let mut iter = vs.iter();
+        let next = iter.next();
+        let view = next.unwrap();
+
+        let dims = [
+            DimTypeId::X,
+            DimTypeId::Y,
+            DimTypeId::Z,
+            DimTypeId::Intensity,
+            DimTypeId::ReturnNumber,
+            DimTypeId::NumberOfReturns,
+            DimTypeId::ScanDirectionFlag,
+            DimTypeId::EdgeOfFlightLine,
+            DimTypeId::Classification,
+            DimTypeId::Synthetic,
+            DimTypeId::KeyPoint,
+            DimTypeId::Withheld,
+            DimTypeId::Overlap,
+            DimTypeId::ScanAngleRank,
+            DimTypeId::UserData,
+            DimTypeId::PointSourceId,
+            DimTypeId::GpsTime,
+            DimTypeId::Red,
+            DimTypeId::Green,
+            DimTypeId::Blue,
+        ];
+
+        let example: PointId = 4;
+
+        for d in dims {
+            let dim_val = view.get_point_value::<f64>(d, example);
+            assert!(dim_val.is_ok());
+            let dim_val = dim_val.unwrap();
+            let typ = view.layout().dimEncoding(d);
+            println!("Dim: {:?}, Value: {:?}, Type: {:?}", d, dim_val, typ);
+        }
+        // 637174.330,849407.370,411.380,15.000,1.000,1.000,1.000,0.000,1.000,0.000,0.000,0.000,0.000,-18.000,130.000,7326.000,245379.401,78.000,94.000,89.000
     }
 }

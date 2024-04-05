@@ -37,8 +37,12 @@ mod ffi {
 
         #[namespace = "pdal_sys::core"]
         type DimTypeId = crate::core::DimTypeId;
-        fn dimOffset(self: &PointLayout, id: DimTypeId) -> Result<usize>;
-        fn dimSize(self: &PointLayout, id: DimTypeId) -> Result<usize>;
+        #[namespace = "pdal_sys::core"]
+        type DimTypeEncoding = crate::core::DimTypeEncoding;
+        fn dimOffset(self: &PointLayout, id: DimTypeId) -> usize;
+        fn dimSize(self: &PointLayout, id: DimTypeId) -> usize;
+        #[cxx_name = "dimType"]
+        fn dimEncoding(self: &PointLayout, id: DimTypeId) -> DimTypeEncoding;
 
         #[namespace = "pdal_sys::core"]
         type DimIdIter = crate::core::DimIdIter;

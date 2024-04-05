@@ -32,14 +32,5 @@ namespace pdal_sys {
         std::size_t dimensionCount(const PointLayout &pl) {
             return pl.dims().size();
         }
-
-        std::size_t dimOffset(const PointLayout &pl, pdal::Dimension::Id id) {
-            return pl.dimOffset(id);
-        }
-
-        std::size_t dimSize(const PointLayout &pl, pdal::Dimension::Id id) {
-            return pl.dimSize(id);
-        }
-
     }
 }
