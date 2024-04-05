@@ -22,7 +22,6 @@
 mod enums;
 
 pub use enums::*;
-use std::ffi::c_char;
 
 #[cxx::bridge(namespace = "pdal_sys")]
 mod ffi {
@@ -52,6 +51,8 @@ mod ffi {
         fn hasNextId(self: &DimIdIter) -> bool;
         #[cxx_name = "next"]
         fn nextId(self: Pin<&mut DimIdIter>) -> Result<&DimTypeId>;
+
+        fn pdal_sys_throw(msg: &str) -> Result<()>;
     }
 
     // These trigger the generation of the C++ template backing this concrete type.
@@ -61,31 +62,12 @@ mod ffi {
 }
 
 use cxx::UniquePtr;
-pub use ffi::{DimIdIter, DimType, DimTypeEncoding, DimTypeIter};
+pub use ffi::{pdal_sys_throw, DimIdIter, DimType, DimTypeEncoding, DimTypeIter};
 use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
 use std::mem;
 
 pub type PointId = u64;
-
-#[derive(Clone)]
-pub struct PackedPoint {
-    data: Vec<c_char>,
-}
-
-impl PackedPoint {
-    pub(crate) fn new(buf: Vec<c_char>) -> PackedPoint {
-        PackedPoint { data: buf }
-    }
-}
-
-impl Debug for PackedPoint {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("PackedPoint")
-            .field("len", &self.data.len())
-            .finish_non_exhaustive()
-    }
-}
 
 impl DimType {
     #[inline]

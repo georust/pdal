@@ -19,9 +19,14 @@
 
 
 #include "pdal-sys/src/core/core.hpp"
+#include <pdal/pdal_types.hpp>
 
 namespace pdal_sys {
     namespace core {
+        void pdal_sys_throw(rust::Str msg) {
+            throw pdal::pdal_error(static_cast<std::string>(msg));
+        }
+
         DimTypeId id(const DimType &dt) {
             return dt.m_id;
         }

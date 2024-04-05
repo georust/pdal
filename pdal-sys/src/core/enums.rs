@@ -183,3 +183,39 @@ unsafe impl cxx::ExternType for DimTypeEncoding {
     type Id = cxx::type_id!("pdal_sys::core::DimTypeEncoding");
     type Kind = cxx::kind::Trivial;
 }
+
+pub trait PdalType: Sized {
+    fn encoding() -> DimTypeEncoding;
+    /// Convert dynamic type to static type when logically known.
+    /// Returns `None` if given value isn't actually the <u>exact</u> same
+    /// type as encoding.
+    fn static_cast<T: PdalType>(value: T) -> Option<Self> {
+        if Self::encoding() == T::encoding() {
+            Some(unsafe { std::mem::transmute_copy::<T, Self>(&value) })
+        } else {
+            None
+        }
+    }
+}
+
+macro_rules! impl_pdal_type {
+    ($t:ty, $enc:ident) => {
+        impl PdalType for $t {
+            fn encoding() -> DimTypeEncoding {
+                DimTypeEncoding::$enc
+            }
+        }
+    };
+    () => {};
+}
+
+impl_pdal_type!(i8, Signed8);
+impl_pdal_type!(u8, Unsigned8);
+impl_pdal_type!(i16, Signed16);
+impl_pdal_type!(u16, Unsigned16);
+impl_pdal_type!(i32, Signed32);
+impl_pdal_type!(u32, Unsigned32);
+impl_pdal_type!(i64, Signed64);
+impl_pdal_type!(u64, Unsigned64);
+impl_pdal_type!(f32, Float);
+impl_pdal_type!(f64, Double);
