@@ -67,8 +67,8 @@ impl PointView {
     }
 
     /// The the dimension value of the point at the given index.
-    pub fn get_point_value<T: PdalType>(&self, dim: DimTypeId, idx: PointId) -> Result<T> {
-        Ok(self.0.get_point_value(dim, idx)?)
+    pub fn point_value_as<T: PdalType>(&self, dim: DimTypeId, idx: PointId) -> Result<T> {
+        Ok(self.0.point_value_as(dim, idx)?)
     }
 }
 

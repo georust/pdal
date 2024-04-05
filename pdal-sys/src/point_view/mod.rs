@@ -47,16 +47,16 @@ mod ffi {
         fn wkt(pv: &PointView) -> Result<String>;
         #[namespace = "pdal_sys::core"]
         type DimTypeId = crate::core::DimTypeId;
-        fn getPointValue_i8(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<i8>;
-        fn getPointValue_u8(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<u8>;
-        fn getPointValue_i16(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<i16>;
-        fn getPointValue_u16(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<u16>;
-        fn getPointValue_i32(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<i32>;
-        fn getPointValue_u32(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<u32>;
-        fn getPointValue_i64(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<i64>;
-        fn getPointValue_u64(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<u64>;
-        fn getPointValue_f32(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<f32>;
-        fn getPointValue_f64(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<f64>;
+        fn pointField_i8(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<i8>;
+        fn pointField_u8(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<u8>;
+        fn pointField_i16(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<i16>;
+        fn pointField_u16(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<u16>;
+        fn pointField_i32(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<i32>;
+        fn pointField_u32(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<u32>;
+        fn pointField_i64(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<i64>;
+        fn pointField_u64(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<u64>;
+        fn pointField_f32(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<f32>;
+        fn pointField_f64(pv: &PointView, dim: DimTypeId, idx: u64) -> Result<f64>;
     }
 
     // This triggers the generation of the C++ template backing this concrete type.
@@ -84,22 +84,22 @@ impl PointView {
     pub fn layout(&self) -> &crate::layout::PointLayout {
         ffi::layout(self)
     }
-    pub fn get_point_value<T: PdalType>(
+    pub fn point_value_as<T: PdalType>(
         &self,
         dim: DimTypeId,
         idx: PointId,
     ) -> Result<T, cxx::Exception> {
         let r = match T::encoding() {
-            DimTypeEncoding::Unsigned8 => T::static_cast(ffi::getPointValue_u8(self, dim, idx)?),
-            DimTypeEncoding::Signed8 => T::static_cast(ffi::getPointValue_i8(self, dim, idx)?),
-            DimTypeEncoding::Unsigned16 => T::static_cast(ffi::getPointValue_u16(self, dim, idx)?),
-            DimTypeEncoding::Signed16 => T::static_cast(ffi::getPointValue_i16(self, dim, idx)?),
-            DimTypeEncoding::Unsigned32 => T::static_cast(ffi::getPointValue_u32(self, dim, idx)?),
-            DimTypeEncoding::Signed32 => T::static_cast(ffi::getPointValue_i32(self, dim, idx)?),
-            DimTypeEncoding::Unsigned64 => T::static_cast(ffi::getPointValue_u64(self, dim, idx)?),
-            DimTypeEncoding::Signed64 => T::static_cast(ffi::getPointValue_i64(self, dim, idx)?),
-            DimTypeEncoding::Float => T::static_cast(ffi::getPointValue_f32(self, dim, idx)?),
-            DimTypeEncoding::Double => T::static_cast(ffi::getPointValue_f64(self, dim, idx)?),
+            DimTypeEncoding::Unsigned8 => T::static_cast(ffi::pointField_u8(self, dim, idx)?),
+            DimTypeEncoding::Signed8 => T::static_cast(ffi::pointField_i8(self, dim, idx)?),
+            DimTypeEncoding::Unsigned16 => T::static_cast(ffi::pointField_u16(self, dim, idx)?),
+            DimTypeEncoding::Signed16 => T::static_cast(ffi::pointField_i16(self, dim, idx)?),
+            DimTypeEncoding::Unsigned32 => T::static_cast(ffi::pointField_u32(self, dim, idx)?),
+            DimTypeEncoding::Signed32 => T::static_cast(ffi::pointField_i32(self, dim, idx)?),
+            DimTypeEncoding::Unsigned64 => T::static_cast(ffi::pointField_u64(self, dim, idx)?),
+            DimTypeEncoding::Signed64 => T::static_cast(ffi::pointField_i64(self, dim, idx)?),
+            DimTypeEncoding::Float => T::static_cast(ffi::pointField_f32(self, dim, idx)?),
+            DimTypeEncoding::Double => T::static_cast(ffi::pointField_f64(self, dim, idx)?),
             _ => None,
         };
 
@@ -210,7 +210,7 @@ mod tests {
         let example: PointId = 4;
 
         for d in dims {
-            let dim_val = view.get_point_value::<f64>(d, example);
+            let dim_val = view.point_value_as::<f64>(d, example);
             assert!(dim_val.is_ok());
             let dim_val = dim_val.unwrap();
             let typ = view.layout().dimEncoding(d);

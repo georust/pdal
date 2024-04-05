@@ -179,6 +179,7 @@ pub enum DimTypeEncoding {
     Double = 1032,
 }
 
+/// Enables copy by value
 unsafe impl cxx::ExternType for DimTypeEncoding {
     type Id = cxx::type_id!("pdal_sys::core::DimTypeEncoding");
     type Kind = cxx::kind::Trivial;

@@ -33,16 +33,16 @@ namespace pdal_sys {
         const pdal::PointLayout& layout(const PointView& view);
         rust::String proj4(const PointView& view);
         rust::String wkt(const PointView& view);
-        std::int8_t getPointValue_i8(const PointView&, core::DimTypeId, pdal::PointId);
-        std::uint8_t getPointValue_u8(const PointView&, core::DimTypeId, pdal::PointId);
-        std::int16_t getPointValue_i16(const PointView&, core::DimTypeId, pdal::PointId);
-        std::uint16_t getPointValue_u16(const PointView&, core::DimTypeId, pdal::PointId);
-        std::int32_t getPointValue_i32(const PointView&, core::DimTypeId, pdal::PointId);
-        std::uint32_t getPointValue_u32(const PointView&, core::DimTypeId, pdal::PointId);
-        std::int64_t getPointValue_i64(const PointView&, core::DimTypeId, pdal::PointId);
-        std::uint64_t getPointValue_u64(const PointView&, core::DimTypeId, pdal::PointId);
-        float getPointValue_f32(const PointView&, core::DimTypeId, pdal::PointId);
-        double getPointValue_f64(const PointView&, core::DimTypeId, pdal::PointId);
+        std::int8_t pointField_i8(const PointView&, core::DimTypeId, pdal::PointId);
+        std::uint8_t pointField_u8(const PointView&, core::DimTypeId, pdal::PointId);
+        std::int16_t pointField_i16(const PointView&, core::DimTypeId, pdal::PointId);
+        std::uint16_t pointField_u16(const PointView&, core::DimTypeId, pdal::PointId);
+        std::int32_t pointField_i32(const PointView&, core::DimTypeId, pdal::PointId);
+        std::uint32_t pointField_u32(const PointView&, core::DimTypeId, pdal::PointId);
+        std::int64_t pointField_i64(const PointView&, core::DimTypeId, pdal::PointId);
+        std::uint64_t pointField_u64(const PointView&, core::DimTypeId, pdal::PointId);
+        float pointField_f32(const PointView&, core::DimTypeId, pdal::PointId);
+        double pointField_f64(const PointView&, core::DimTypeId, pdal::PointId);
     }
 
     namespace point_view_set {

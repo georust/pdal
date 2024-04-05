@@ -70,34 +70,34 @@ namespace pdal_sys {
             return retval;
         }
 
-        std::int8_t getPointValue_i8(const PointView& pv, core::DimTypeId dim, pdal::PointId id) {
+        std::int8_t pointField_i8(const PointView& pv, core::DimTypeId dim, pdal::PointId id) {
             return pv.getFieldAs<std::int8_t>(dim, id);
         }
-        std::uint8_t getPointValue_u8(const PointView& pv, core::DimTypeId dim, pdal::PointId id) {
+        std::uint8_t pointField_u8(const PointView& pv, core::DimTypeId dim, pdal::PointId id) {
             return pv.getFieldAs<std::uint8_t>(dim, id);
         }
-        std::int16_t getPointValue_i16(const PointView& pv, core::DimTypeId dim, pdal::PointId id) {
+        std::int16_t pointField_i16(const PointView& pv, core::DimTypeId dim, pdal::PointId id) {
             return pv.getFieldAs<std::int16_t>(dim, id);
         }
-        std::uint16_t getPointValue_u16(const PointView& pv, core::DimTypeId dim, pdal::PointId id) {
+        std::uint16_t pointField_u16(const PointView& pv, core::DimTypeId dim, pdal::PointId id) {
             return pv.getFieldAs<std::uint16_t>(dim, id);
         }
-        std::int32_t getPointValue_i32(const PointView& pv, core::DimTypeId dim, pdal::PointId id) {
+        std::int32_t pointField_i32(const PointView& pv, core::DimTypeId dim, pdal::PointId id) {
             return pv.getFieldAs<std::int32_t>(dim, id);
         }
-        std::uint32_t getPointValue_u32(const PointView& pv, core::DimTypeId dim, pdal::PointId id) {
+        std::uint32_t pointField_u32(const PointView& pv, core::DimTypeId dim, pdal::PointId id) {
             return pv.getFieldAs<std::uint32_t>(dim, id);
         }
-        std::int64_t getPointValue_i64(const PointView& pv, core::DimTypeId dim, pdal::PointId id) {
+        std::int64_t pointField_i64(const PointView& pv, core::DimTypeId dim, pdal::PointId id) {
             return pv.getFieldAs<std::int64_t>(dim, id);
         }
-        std::uint64_t getPointValue_u64(const PointView& pv, core::DimTypeId dim, pdal::PointId id) {
+        std::uint64_t pointField_u64(const PointView& pv, core::DimTypeId dim, pdal::PointId id) {
             return pv.getFieldAs<std::uint64_t>(dim, id);
         }
-        float getPointValue_f32(const PointView& pv, core::DimTypeId dim, pdal::PointId id) {
+        float pointField_f32(const PointView& pv, core::DimTypeId dim, pdal::PointId id) {
             return pv.getFieldAs<float>(dim, id);
         }
-        double getPointValue_f64(const PointView& pv, core::DimTypeId dim, pdal::PointId id) {
+        double pointField_f64(const PointView& pv, core::DimTypeId dim, pdal::PointId id) {
             return pv.getFieldAs<double>(dim, id);
         }
     }
