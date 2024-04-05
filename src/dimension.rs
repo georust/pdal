@@ -32,15 +32,11 @@ impl<'view> LayoutDimension<'view> {
 
     /// Size of the dimension in bytes.
     pub fn size_bytes(&self) -> usize {
-        self.0
-            .dimension_size(self.1)
-            .expect("dimension exists in parent layout")
+        self.0.dimension_size(self.1)
     }
 
     pub fn offset(&self) -> usize {
-        self.0
-            .dimension_offset(self.1)
-            .expect("dimension exists in parent layout")
+        self.0.dimension_offset(self.1)
     }
 
     pub fn encoding(&self) -> DimTypeEncoding {

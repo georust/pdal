@@ -51,13 +51,13 @@ impl<'a> PointLayout<'a> {
     }
 
     /// Get the size in bytes of the given dimension in this layout.
-    pub fn dimension_size(&self, id: DimTypeId) -> Option<usize> {
-        self.0.dimSize(id).ok()
+    pub fn dimension_size(&self, id: DimTypeId) -> usize {
+        self.0.dimSize(id)
     }
 
     /// Returns the byte offset of a dimension type with the given name.
-    pub fn dimension_offset(&self, id: DimTypeId) -> Option<usize> {
-        self.0.dimOffset(id).ok()
+    pub fn dimension_offset(&self, id: DimTypeId) -> usize {
+        self.0.dimOffset(id)
     }
 }
 
@@ -86,9 +86,9 @@ mod tests {
         let layout = view.layout()?;
 
         assert_eq!(layout.point_size(), 56);
-        assert_eq!(layout.dimension_offset(DimTypeId::X).unwrap(), 0);
-        assert_eq!(layout.dimension_size(DimTypeId::X).unwrap(), 8);
-        assert_eq!(layout.dimension_offset(DimTypeId::Y).unwrap(), 1);
+        assert_eq!(layout.dimension_offset(DimTypeId::X), 0);
+        assert_eq!(layout.dimension_size(DimTypeId::X), 8);
+        assert_eq!(layout.dimension_offset(DimTypeId::Y), 1);
 
         Ok(())
     }

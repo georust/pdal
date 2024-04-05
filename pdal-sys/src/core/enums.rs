@@ -17,6 +17,7 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+/// Standard PDAL dimension types.
 // NB: this was hand copied. In the future we should use `bindgen` to ensure future compatibility
 #[derive(Clone, Copy, PartialEq, Eq, Default, Hash)]
 #[repr(C)]
@@ -185,22 +186,6 @@ unsafe impl cxx::ExternType for DimTypeEncoding {
     type Kind = cxx::kind::Trivial;
 }
 
-/// Discriminated union of instances of PDAL primitive types.
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum PdalValue {
-    None,
-    Unsigned8(u8),
-    Signed8(i8),
-    Unsigned16(u16),
-    Signed16(i16),
-    Unsigned32(u32),
-    Signed32(i32),
-    Unsigned64(u64),
-    Signed64(i64),
-    Float(f32),
-    Double(f64),
-}
-
 pub trait PdalType: Sized {
     /// Get the corresponding PDAL datatype encoding to this type.
     fn encoding() -> DimTypeEncoding;
@@ -217,16 +202,6 @@ pub trait PdalType: Sized {
         } else {
             None
         }
-    }
-}
-
-impl PdalType for PdalValue {
-    fn encoding() -> DimTypeEncoding {
-        DimTypeEncoding::None
-    }
-
-    fn into_pdal_value(self) -> PdalValue {
-        self
     }
 }
 
@@ -254,3 +229,48 @@ impl_pdal_type!(i64, Signed64);
 impl_pdal_type!(u64, Unsigned64);
 impl_pdal_type!(f32, Float);
 impl_pdal_type!(f64, Double);
+
+/// Discriminated union of instances of PDAL primitive types.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum PdalValue {
+    None,
+    Unsigned8(u8),
+    Signed8(i8),
+    Unsigned16(u16),
+    Signed16(i16),
+    Unsigned32(u32),
+    Signed32(i32),
+    Unsigned64(u64),
+    Signed64(i64),
+    Float(f32),
+    Double(f64),
+}
+
+impl PdalValue {
+    pub fn to_f64(&self) -> f64 {
+        match self {
+            PdalValue::None => 0.0,
+            PdalValue::Unsigned8(v) => *v as f64,
+            PdalValue::Signed8(v) => *v as f64,
+            PdalValue::Unsigned16(v) => *v as f64,
+            PdalValue::Signed16(v) => *v as f64,
+            PdalValue::Unsigned32(v) => *v as f64,
+            PdalValue::Signed32(v) => *v as f64,
+            PdalValue::Unsigned64(v) => *v as f64,
+            PdalValue::Signed64(v) => *v as f64,
+            PdalValue::Float(v) => *v as f64,
+            PdalValue::Double(v) => *v,
+        }
+    }
+}
+
+/// Provides coherence with type parameters against primitive types
+impl PdalType for PdalValue {
+    fn encoding() -> DimTypeEncoding {
+        DimTypeEncoding::None
+    }
+
+    fn into_pdal_value(self) -> PdalValue {
+        self
+    }
+}

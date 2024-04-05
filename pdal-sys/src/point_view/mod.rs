@@ -181,6 +181,7 @@ impl Iterator for PointViewSetIterator<'_> {
 
 #[cfg(test)]
 mod tests {
+    use crate::core::DimTypeId::Dimension;
     use crate::core::{DimTypeId, PdalValue, PointId};
     use crate::pipeline_manager::createPipelineManager;
     use crate::testkit::*;
@@ -246,7 +247,7 @@ mod tests {
             (DimTypeId::Blue, PdalValue::Unsigned16(89)),
         ]);
 
-        for (dim, expected_value) in expected {
+        for (&dim, &expected_value) in &expected {
             let dim_val = view.point_value_as::<PdalValue>(dim, example);
             assert!(
                 dim_val.is_ok(),
@@ -258,5 +259,11 @@ mod tests {
                 "Unexpected value for dimension {dim:?}"
             );
         }
+
+        assert_eq!(
+            view.point_value_as::<f64>(DimTypeId::X, example)
+                .expect("x coord"),
+            expected[&DimTypeId::X].to_f64()
+        );
     }
 }
