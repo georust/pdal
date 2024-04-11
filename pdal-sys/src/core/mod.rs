@@ -62,7 +62,8 @@ mod ffi {
 }
 
 use cxx::UniquePtr;
-pub use ffi::{pdal_sys_throw, DimIdIter, DimType, DimTypeEncoding, DimTypeIter};
+pub(crate) use ffi::DimTypeIter;
+pub use ffi::{pdal_sys_throw, DimIdIter, DimType, DimTypeEncoding};
 use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
 use std::mem;

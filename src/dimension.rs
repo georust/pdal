@@ -17,9 +17,13 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+/// Dimension type identifier. E.g. X, Y, Z, Red, Green, Blue, etc.
 pub type DimTypeId = pdal_sys::core::DimTypeId;
+
+/// How the dimension is encoded. E.g. `Unsiged8`, `Signed64`, `Double`, etc.
 pub type DimTypeEncoding = pdal_sys::core::DimTypeEncoding;
 
+/// A dimension in a point layout.
 pub struct LayoutDimension<'view>(
     pub(crate) &'view crate::PointLayout<'view>,
     pub(crate) DimTypeId,
@@ -64,18 +68,12 @@ mod tests {
         let layout = view.layout()?;
         assert_eq!(layout.dimension_count(), 20);
 
-        dbg!(&layout);
-
         let dim = layout
             .dimension_types()
             .find(|dt| dt.id() == DimTypeId::Blue)
             .ok_or("Blue dimension not found")?;
 
-        dbg!(dim.encoding());
-        // assert_eq!(dim.interpretation()?, "uint16_t");
-        // assert_eq!(dim.size_bytes(), 2);
-        // assert_eq!(dim.scale(), 1.0);
-        // assert_eq!(dim.offset(), 0.0);
+        assert_eq!(dim.encoding(), crate::DimTypeEncoding::Unsigned16);
 
         Ok(())
     }

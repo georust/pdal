@@ -20,6 +20,7 @@
 use crate::error::Result;
 use std::path::PathBuf;
 
+/// Configuration info as reported by PDAL.
 #[derive(Clone, Debug)]
 pub struct Config {
     pub version: String,

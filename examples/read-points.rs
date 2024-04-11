@@ -1,14 +1,3 @@
-# PDAL Bindings for Rust
-
-This crate provides Rust bindings for the [PDAL](https://pdal.io) library.
-
-THIS IS A WORK IN PROGRESS.  The API is not stable (nor complete) and is subject to change.
-
-Contributions welcome!
-
-## Minimalist Example
-
-```rust
 use pdal::Pipeline;
 use pdal_sys::core::DimTypeId;
 use std::error::Error;
@@ -46,4 +35,3 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
-```

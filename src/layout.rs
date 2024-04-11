@@ -20,7 +20,7 @@
 use crate::{DimTypeId, LayoutDimension};
 use std::fmt::Debug;
 
-/// Point layout definition
+/// Point layout definition, describing the schema the points in a view.
 pub struct PointLayout<'pv>(pub(crate) &'pv pdal_sys::layout::PointLayout);
 
 impl<'a> PointLayout<'a> {

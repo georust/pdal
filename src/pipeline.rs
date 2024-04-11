@@ -17,40 +17,22 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-// MIT License
-//
-// Copyright (c) 2024 NUVIEW, Inc. <simeon.fitch@nuview.space>
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
-// and associated documentation files (the "Software"), to deal in the Software without restriction,
-// including without limitation the rights to use, copy, modify, merge, publish, distribute,
-// sublicense, and/or sell copies of the Software, and to permit persons to whom the Software iString furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in all copies or
-// substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-// BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
-// OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 use crate::error::Result;
-use crate::json::PdalJson;
 
 use crate::PointView;
 use pdal_sys::pipeline_manager::{PipelineManager, PipelineManagerPtr};
 use std::fmt::{Display, Formatter};
 
+/// Primary interface for constructing and executing PDAL pipelines.
 #[derive(Debug)]
 pub struct Pipeline(PipelineManagerPtr);
 
 impl Pipeline {
     /// Construct a new pipeline.
-    pub fn new<J: Into<PdalJson>>(pdal_json: J) -> Result<Self> {
-        let json: PdalJson = pdal_json.try_into()?;
+    pub fn new<J: AsRef<str>>(pdal_json: J) -> Result<Self> {
+        let pdal_json = pdal_json.as_ref();
         let mut mgr = PipelineManager::new();
-        mgr.pin_mut().readPipeline(&json.to_string())?;
+        mgr.pin_mut().readPipeline(pdal_json)?;
         Ok(Self(mgr))
     }
 
@@ -76,6 +58,7 @@ impl Pipeline {
     }
 }
 
+/// A [`Pipeline`] after it has been executed, thereby accessible for further inspection.
 #[derive(Debug)]
 pub struct ExecutedPipeline {
     pipeline: Pipeline,

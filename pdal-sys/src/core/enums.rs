@@ -247,19 +247,19 @@ pub enum PdalValue {
 }
 
 impl PdalValue {
-    pub fn to_f64(&self) -> f64 {
+    pub fn to_f64(self) -> f64 {
         match self {
             PdalValue::None => 0.0,
-            PdalValue::Unsigned8(v) => *v as f64,
-            PdalValue::Signed8(v) => *v as f64,
-            PdalValue::Unsigned16(v) => *v as f64,
-            PdalValue::Signed16(v) => *v as f64,
-            PdalValue::Unsigned32(v) => *v as f64,
-            PdalValue::Signed32(v) => *v as f64,
-            PdalValue::Unsigned64(v) => *v as f64,
-            PdalValue::Signed64(v) => *v as f64,
-            PdalValue::Float(v) => *v as f64,
-            PdalValue::Double(v) => *v,
+            PdalValue::Unsigned8(v) => v as f64,
+            PdalValue::Signed8(v) => v as f64,
+            PdalValue::Unsigned16(v) => v as f64,
+            PdalValue::Signed16(v) => v as f64,
+            PdalValue::Unsigned32(v) => v as f64,
+            PdalValue::Signed32(v) => v as f64,
+            PdalValue::Unsigned64(v) => v as f64,
+            PdalValue::Signed64(v) => v as f64,
+            PdalValue::Float(v) => v as f64,
+            PdalValue::Double(v) => v,
         }
     }
 }

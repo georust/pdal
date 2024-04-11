@@ -20,7 +20,6 @@
 mod config;
 mod dimension;
 mod error;
-mod json;
 mod layout;
 mod pipeline;
 mod point_view;
@@ -30,7 +29,6 @@ pub(crate) mod utils;
 
 pub use config::*;
 pub use dimension::*;
-pub use json::PdalJson;
 pub use layout::*;
 pub use pipeline::*;
 pub use point_view::*;

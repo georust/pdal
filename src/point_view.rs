@@ -92,6 +92,7 @@ impl Debug for PointView {
 mod tests {
     use crate::testkit::{read_test_file, TestResult};
     use crate::{error::Result, DimTypeId, ExecutedPipeline, Pipeline};
+    use pdal_sys::core::PdalValue;
 
     fn fixture() -> Result<ExecutedPipeline> {
         let json = read_test_file("copy.json");
@@ -113,21 +114,19 @@ mod tests {
     }
 
     #[test]
-    fn test_packed_point() -> TestResult {
+    fn test_point_values() -> TestResult {
         let result = fixture()?;
         let views = result.point_views()?;
         let view = views.first().ok_or("no point view")?;
 
-        let dims = [DimTypeId::X, DimTypeId::Y, DimTypeId::Z];
+        let total_intensity = view
+            .point_ids()
+            .filter_map(|pid| view.point_value(DimTypeId::Intensity, pid).ok())
+            .map(PdalValue::to_f64)
+            .sum::<f64>();
 
-        for pid in view.point_ids().take(5) {
-            dbg!(pid);
-        }
-
-        //        let dims = layout.dimension_types()?;
-        //        let point = view.get_packed_point(&dims, 0)?;
-        //        assert_eq!(point.0.len(), 56);
-        // TODO: Check values
+        let average_intensity = total_intensity / view.len() as f64;
+        assert_eq!(average_intensity.floor(), 102.0);
         Ok(())
     }
 }
