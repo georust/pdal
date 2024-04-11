@@ -186,6 +186,7 @@ unsafe impl cxx::ExternType for DimTypeEncoding {
     type Kind = cxx::kind::Trivial;
 }
 
+/// Trait for Rust types that can be represented as PDAL dimension types.
 pub trait PdalType: Sized {
     /// Get the corresponding PDAL datatype encoding to this type.
     fn encoding() -> DimTypeEncoding;

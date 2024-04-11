@@ -198,6 +198,7 @@ dependencies = [
  "cxx",
  "cxx-build",
  "env_logger",
+ "once_cell",
  "pkg-config",
 ]
 

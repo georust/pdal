@@ -19,6 +19,7 @@
 
 #![allow(dead_code)]
 
+#[allow(clippy::needless_lifetimes)]
 #[cxx::bridge(namespace = "pdal_sys")]
 mod ffi {
     #[namespace = "pdal_sys::layout"]
@@ -47,7 +48,6 @@ mod ffi {
         #[namespace = "pdal_sys::core"]
         type DimIdIter = crate::core::DimIdIter;
         fn dimIds(pl: &PointLayout) -> UniquePtr<DimIdIter>;
-
     }
 }
 pub use ffi::PointLayout;

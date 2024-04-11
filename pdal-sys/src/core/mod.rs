@@ -68,6 +68,7 @@ use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
 use std::mem;
 
+/// Unique identifier for a point in a point view.
 pub type PointId = u64;
 
 impl DimType {

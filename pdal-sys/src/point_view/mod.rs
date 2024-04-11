@@ -17,8 +17,7 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
 // OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#![allow(dead_code)]
-
+#[allow(clippy::needless_lifetimes)]
 #[cxx::bridge(namespace = "pdal_sys")]
 mod ffi {
 
@@ -72,6 +71,11 @@ use std::fmt::{Debug, Formatter};
 pub type PointViewPtr = SharedPtr<PointView>;
 
 impl PointView {
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     #[inline]
     pub fn proj4(&self) -> Result<String, cxx::Exception> {
         ffi::proj4(self)
@@ -159,7 +163,12 @@ impl Debug for PointView {
     }
 }
 
+/// Unordered set of [`PointView`] instances.
 impl PointViewSet {
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
     pub fn iter(&self) -> impl Iterator<Item = PointViewPtr> + '_ {
         PointViewSetIterator(ffi::iter(self))
     }
@@ -181,7 +190,6 @@ impl Iterator for PointViewSetIterator<'_> {
 
 #[cfg(test)]
 mod tests {
-    use crate::core::DimTypeId::Dimension;
     use crate::core::{DimTypeId, PdalValue, PointId};
     use crate::pipeline_manager::createPipelineManager;
     use crate::testkit::*;
@@ -222,7 +230,7 @@ mod tests {
         let next = iter.next();
         let view = next.unwrap();
 
-        /// Manually extracted point values.
+        // Manually extracted point values.
         let example: PointId = 4;
         let expected = HashMap::from([
             (DimTypeId::X, PdalValue::Double(637174.33)),

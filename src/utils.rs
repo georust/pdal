@@ -49,7 +49,7 @@ impl<T> Conv<T> {
 impl<T> Deref for Conv<T> {
     type Target = T;
     fn deref(&self) -> &Self::Target {
-        &self.inner()
+        self.inner()
     }
 }
 

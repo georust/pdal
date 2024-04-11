@@ -4,11 +4,12 @@ This crate provides Rust bindings for the [PDAL](https://pdal.io) library.
 
 THIS IS A WORK IN PROGRESS.  The API is not stable (nor complete) and is subject to change.
 
-Contributions welcome!
+Contributions welcome! Please open an issue or PR if you have any feedback or would like to contribute. 
+Come discuss the project with other GeoRust contributors at our [Discord server](https://discord.gg/Fp2aape).
 
 ## Minimalist Example
 
-```rust
+```rust, no_run
 use pdal::Pipeline;
 use pdal_sys::core::DimTypeId;
 use std::error::Error;
@@ -38,10 +39,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     let views = results.point_views()?;
     let view = views.first().ok_or("no point view")?;
     for pid in view.point_ids().take(3) {
-        let x = view.point_value(DimTypeId::X, pid)?;
-        let y = view.point_value(DimTypeId::Y, pid)?;
-        let z = view.point_value(DimTypeId::Z, pid)?;
-        println!("{}: ({}, {}, {})", pid, x.to_f64(), y.to_f64(), z.to_f64());
+        let x = view.point_value_as::<f64>(DimTypeId::X, pid)?;
+        let y = view.point_value_as::<f64>(DimTypeId::Y, pid)?;
+        let z = view.point_value_as::<f64>(DimTypeId::Z, pid)?;
+        println!("{}: ({}, {}, {})", pid, x, y, z);
     }
 
     Ok(())

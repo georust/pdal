@@ -1,9 +1,14 @@
 [package]
 name = "pdal-sys"
-version = "0.1.0"
-edition = "2021"
-
 links = "pdal"
+description = "Low level Rust <-> C++ bindings to PDAL"
+version.workspace = true
+license.workspace = true
+edition.workspace = true
+repository.workspace = true
+categories.workspace = true
+keywords.workspace = true
+publish = true
 
 [dependencies]
 cxx = "1.0.0"
@@ -12,7 +17,7 @@ once_cell = "1.19.0"
 [build-dependencies]
 cmake = "0.1.50"
 pkg-config = "0.3"
-env_logger = "*"
+env_logger = "0.11"
 cxx-build = "1"
 
 [dev-dependencies]

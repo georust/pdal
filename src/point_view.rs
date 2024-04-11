@@ -22,6 +22,8 @@ use crate::utils::Elided;
 use crate::{DimTypeId, PointLayout};
 use std::fmt::{Debug, Formatter};
 
+/// Unique identifier for a point in a point view.
+
 pub type PointId = pdal_sys::core::PointId;
 
 pub use pdal_sys::core::PdalType;

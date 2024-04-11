@@ -35,7 +35,7 @@ pub static TARGET_DIR: Lazy<&Path> = Lazy::new(|| Path::new(env!("CARGO_TARGET_D
 /// Read a text file from the test data directory.
 pub fn read_test_file(filename: &str) -> String {
     std::fs::read_to_string(DATA_DIR.join(filename))
-        .expect(&format!("Data file contents for {filename}"))
+        .unwrap_or_else(|_| panic!("Error reading '{filename}'"))
 }
 
 pub type TestResult = crate::error::Result<()>;

@@ -27,10 +27,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     let views = results.point_views()?;
     let view = views.first().ok_or("no point view")?;
     for pid in view.point_ids().take(3) {
-        let x = view.point_value(DimTypeId::X, pid)?;
-        let y = view.point_value(DimTypeId::Y, pid)?;
-        let z = view.point_value(DimTypeId::Z, pid)?;
-        println!("{}: ({}, {}, {})", pid, x.to_f64(), y.to_f64(), z.to_f64());
+        let x = view.point_value_as::<f64>(DimTypeId::X, pid)?;
+        let y = view.point_value_as::<f64>(DimTypeId::Y, pid)?;
+        let z = view.point_value_as::<f64>(DimTypeId::Z, pid)?;
+        println!("{}: ({}, {}, {})", pid, x, y, z);
     }
 
     Ok(())
